@@ -1,0 +1,35 @@
+{
+  "name": "dev-honcho",
+  "version": "1.0.0",
+  "description": "A software aimed at easing system administration and application deployment routines",
+  "main": "app/main.js",
+  "repository": "https://github.com/nkemcels/dev-honcho.git",
+  "author": "nkemcels",
+  "license": "MIT",
+  "scripts": {
+    "start": "yarn build&&electron .",
+    "build": "webpack --config webpack/prod.config.js --mode production --verbose",
+    "launch": "NODE_ENV=dev&&electron ."
+  },
+  "dependencies": {
+    "bootstrap": "3",
+    "jquery": "^3.4.1",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "semantic-ui-css": "^2.4.1",
+    "semantic-ui-react": "^0.87.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.4",
+    "@babel/preset-env": "^7.4.4",
+    "@babel/preset-react": "^7.0.0",
+    "babel-loader": "^8.0.5",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "css-loader": "^2.1.1",
+    "electron": "^5.0.1",
+    "file-loader": "^3.0.1",
+    "style-loader": "^0.23.1",
+    "webpack": "^4.31.0",
+    "webpack-cli": "^3.3.2"
+  }
+}
