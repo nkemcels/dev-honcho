@@ -3,30 +3,33 @@
  ***********************/
 .app-header{
     background-color: #212121;
-    display:-webkit-flex;
-    display: flex;
-    justify-content: space-between;
     height: 2.5em;
 }
 
-.app-header .current-server{
+.app-header-content{
+    display:-webkit-flex;
+    display: flex;
+    justify-content: space-between;
+}
+
+.app-header-content>.current-server{
     display: flex
 }
 
-.app-header .current-server>.menu-icon{
+.app-header-content>.current-server>.menu-icon{
     font-size: 25px;
     color: #BBDEFB;
     padding: 5px;
 }
 
-.app-header .current-server>.menu-icon:hover{
+.app-header-content>.current-server>.menu-icon:hover{
     background-color: #E0E0E0;
     color: #212121;
     transition: 0.25s all;
     border-radius: 2px;
     cursor: pointer;
 }
-.app-header .current-server>.current-server-name{
+.app-header-content>.current-server>.current-server-name{
     font-size: 15px;
     margin-top: 7px;
     color: #BBDEFB;
@@ -34,7 +37,7 @@
     margin-left: 5px;
 }
 
-.app-header .current-menu-item{
+.app-header-content>.current-menu-item{
     font-family: 'Courier New', Courier, monospace;
     color: #F5F5F5;
     font-size: 20px;
@@ -43,23 +46,23 @@
     height: 100%;
 }
 
-.app-header .current-user{
+.app-header-content>.current-user{
     line-height: 2.5em;
-    margin-right: 5px
+    margin-right: 10px
 }
 
-.app-header .current-user>.current-user-icon{
+.app-header-content>.current-user>.current-user-icon{
     color: #F5F5F5;
     font-size: 13px;
     margin-right: 5px
 }
 
-.app-header .current-user>.current-user-name{
+.app-header-content>.current-user>.current-user-name{
     color: #F5F5F5;
     font-size: 13px;
 }
 
-.app-header .current-user:hover{
+.app-header-content>.current-user:hover{
     color: #BBDEFB;
     text-decoration: underline;
     cursor: pointer;

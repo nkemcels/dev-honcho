@@ -14,7 +14,7 @@ export default class HeaderComp extends React.Component{
         return(
             <header className='app-header'>
             {this.props.isAuthenticated?
-                <div>
+                <div className='app-header-content'>
                     <div className="current-server">
                         <span className="glyphicon glyphicon-menu-hamburger menu-icon" />
                         <span className="current-server-name">
@@ -24,22 +24,24 @@ export default class HeaderComp extends React.Component{
                         </span>
                     </div>
                     <div className="current-menu-item">
-                    {this.props.selectedMenu?
-                        this.props.selectedMenu : "DEV-HONCHO"
-                    }
+                        {this.props.selectedMenu?
+                            this.props.selectedMenu : "DEV-HONCHO"
+                        }
                     </div>
                     <div className="current-user">
                         <span className="glyphicon glyphicon-user current-user-icon" />
                         <span className="current-user-name">
                             {this.props.currentUser?
-                                this.props.currentUser: ""
+                                this.props.currentUser:""
                             }
                         </span>
                     </div>
                 </div>
                 :
-                <div className="match-parent">
-                    <div className="current-menu-item centered-content"> {this.props.selectedMenu} </div>
+                <div className='app-header-content'>
+                    <div className="match-parent current-menu-item centered-content">
+                        {this.props.selectedMenu}
+                    </div>
                 </div>
             }
             </header>

@@ -13,7 +13,7 @@ export default class InitialDisplay extends React.Component{
                     <h2>WELCOME</h2>
                     <h5><a href="#">DEV-HONCHO</a> is here to help you get things done FASTER!</h5>
                     <h6>To get started, you need to secure your content by providing access credentials</h6>
-                    <Button onClick={this.handleCreateNewAccount}> Get Started </Button>
+                    <Button onClick={this.handleCreateNewAccount} size="big"> Get Started </Button>
                 </div>
             </div>
         )
