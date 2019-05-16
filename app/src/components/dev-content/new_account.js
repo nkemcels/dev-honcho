@@ -13,10 +13,10 @@ export default class NewAccountPane extends React.Component{
     }
     getSecurityQuestions = ()=>{
         return [
-            {key:"1", text:"What is your favorite meal?"},
-            {key:"2", text:"What is the name of your favorite childhood friend?"},
-            {key:"3", text:"What is your favorite movie?"},
-            {key:"4", text:"Who was your childhood hero?"}
+            {key:"1", text:"What is your favorite meal?", value:"What is your favorite meal?"},
+            {key:"2", text:"What is the name of your favorite childhood friend?", value:"What is the name of your favorite childhood friend?"},
+            {key:"3", text:"What is your favorite movie?", value:"What is your favorite movie?"},
+            {key:"4", text:"Who was your childhood hero?", value:"Who was your childhood hero?"}
         ]
     }
     isPasswordValid = ()=>{
@@ -156,7 +156,7 @@ export default class NewAccountPane extends React.Component{
                                     onChange={(evt, {value})=>this.onInputChange("securityQuestion", evt, value)} />
                                 <Form.Input
                                     label="Answer" 
-                                    value={this.state.recEmail} 
+                                    value={this.state.securityAnswer} 
                                     onChange={(evt)=>this.onInputChange("securityAnswer", evt)}
                                     disabled={!this.hasSecurityQuestion()}/>    
                             </Form>

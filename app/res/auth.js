@@ -2,7 +2,7 @@ const {AUTH_TABLE_FILENAME} = require("../constants");
 const fs = require("fs");
 const path = require("path");
 
-function loadData(){
+function loadAuthData(){
    let loadedData = []
    if( fs.existsSync(path.join(".", "data", AUTH_TABLE_FILENAME)) ){
        loadedData = fs.readFileSync(path.join("data", AUTH_TABLE_FILENAME), {encoding:"utf8"})
@@ -17,42 +17,54 @@ function loadData(){
    return loadedData;
 }
 
-function addNewUser(userData, successCallback, failureCallback){
-    let loadedData = [...loadData(), userData];
-    if( !fs.existsSync(path.join(".", "data", AUTH_TABLE_FILENAME)) ){
-        fs.mkdirSync("./data");
-    }
-    fs.writeFile(path.join(".", "data", AUTH_TABLE_FILENAME), JSON.stringify(loadedData), function(err){
+function writeToFile(filepath, data, callback){
+    
+    fs.writeFile(filepath, JSON.stringify(data), function(err){
         if(err){
-            if(failureCallback && failureCallback instanceof Function){
-                failureCallback(err)
+            if(callback && callback instanceof Function){
+                callback(null, err)
             }
         }else{
-            if(successCallback && successCallback instanceof Function){
-                successCallback(loadedData);
+            if(callback && callback instanceof Function){
+                callback(data, null);
             }
         }
     });
 }
 
-function getAllUsers(){
-    return loadData();
+function addNewUser(userData, callback){
+    let loadedData = [...loadAuthData(), userData];
+    const fpath = path.join(".", "data", AUTH_TABLE_FILENAME);
+    if( !fs.existsSync(fpath) ){
+        fs.mkdirSync("./data");
+    }
+    writeToFile(fpath, loadedData, callback)
 }
 
-function authenticateUser(username, password){
-    let pwdHash = password;
-    let users = getAllUsers();
-    for (let user of users){
-        if(user.username == username && user.password == pwdHash){
-            return true;
+function getAllUsers(){
+    return loadAuthData();
+}
+
+function updateUserPassword(userName, newPassword, callback){
+    let authData = loadAuthData();
+    let pwdUpdated = false;
+    for (let user of authData){
+        if (user.userName == userName){
+            user.password = newPassword;
+            pwdUpdated = true;
         }
     }
 
-    return false;
+    if(pwdUpdated){
+        const fpath = path.join(".", "data", AUTH_TABLE_FILENAME);
+        writeToFile(fpath, authData, callback)
+    }else{
+        callback(null, "Could not update password")
+    }
 }
 
 module.exports = {
     getAllUsers,
-    authenticateUser,
-    addNewUser
+    addNewUser,
+    updateUserPassword
 }

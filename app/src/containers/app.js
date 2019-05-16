@@ -17,8 +17,12 @@ export default class AppContainer extends React.Component{
             CurrentComponent: null
         }
 
+        this.loadUserAuthData(true);
+    }
+
+    loadUserAuthData = (redirectToSignIn=false)=>{
         ipc.send("user-data-request");
-        ipc.once("user-data-response", (evt, data)=>this.handleReceiveUserData(evt, data, true))
+        ipc.once("user-data-response", (evt, data)=>this.handleReceiveUserData(evt, data, redirectToSignIn))
     }
     /**
      * Gets all the user login info and saves it in the state.
@@ -26,11 +30,12 @@ export default class AppContainer extends React.Component{
     handleReceiveUserData = (evt, data, redirectToSignIn=false)=>{
         this.setState({
             authData: (data && data instanceof Array && data.length>0)? data : [],
-            selectedMenu: (data && data instanceof Array && data.length>0)? "SIGN-IN" : "DEV-HONCHO"
         }, ()=>{
             if(redirectToSignIn && this.state.authData.length>0){
+                this.handleChangeHeaderTitle((data && data instanceof Array && data.length>0)? "SIGN-IN" : "DEV-HONCHO")
                 this.renderThisComponent(constants.SIGNIN_PANE)
             }else if(redirectToSignIn){
+                this.handleChangeHeaderTitle((data && data instanceof Array && data.length>0)? "SIGN-IN" : "DEV-HONCHO")
                 this.renderThisComponent(constants.INITIAL_CONTENT);
             }
         });
@@ -42,7 +47,7 @@ export default class AppContainer extends React.Component{
                 successCallback(data.payload);
             }
         }else if(failureCallback && failureCallback instanceof Function){
-            failureCallback(data.payload);
+            failureCallback(data.error);
         }
     }
 
@@ -56,7 +61,17 @@ export default class AppContainer extends React.Component{
             this.setState({
                 authData
             }, ()=>{
-                this.renderThisComponent(constants.HOME_VIEW);
+                this.handleAuthenticateUser(userData.userName, userData.password,(isAuthenticated)=>{
+                    if(isAuthenticated){
+                        this.renderThisComponent(constants.HOME_VIEW);
+                    }else {
+                        alert(`This is weird. Could not login with newly created credentials.
+                                Please restart the app and try again. 
+                                If it persists, consider reinstalling the application.`)
+                        console.log("This is weird. Could not login with newly created password")
+                    }
+                })
+                
             })
         }, failureCallback)
     }
@@ -84,12 +99,41 @@ export default class AppContainer extends React.Component{
 
     getSecurityQuestion = (userName)=>{
         for (let user of this.state.authData){
-            if(userName == user){
+            if(userName == user.userName){
                 return user.securityQuestion;
             }
         }
 
         return null;
+    }
+
+    validateSecurityAnswer = (userName, securityAnswer)=>{
+        for (let user of this.state.authData){
+            if(userName === user.userName){
+                return user.securityAnswer === getHashedString(securityAnswer);
+            }
+        }
+        return false;
+    }
+
+    handleChangeHeaderTitle = (newTitle)=>{
+        this.setState({
+            selectedMenu:newTitle
+        })
+    }
+
+    handleChangePassword = (userName, newPassword, callback)=>{
+        ipc.send("change-user-password", {userName, newPassword});
+        ipc.once("change-user-password-response", (event, data)=>{
+            if (callback && callback instanceof Function){
+                if(data.result ==="OK"){
+                    this.setState({ authData:data.payload })
+                    callback(true);
+                }else{
+                    callback(false, data.error);
+                }
+            }
+        });
     }
 
     renderThisComponent = (component, props)=>{
@@ -121,12 +165,19 @@ export default class AppContainer extends React.Component{
                                 {...props} 
                                 renderComponent = {this.renderThisComponent}
                                 authenticateUser = {this.handleAuthenticateUser}
-                                getSecurityQuestion = {this.getSecurityQuestion} />
+                                getSecurityQuestion = {this.getSecurityQuestion}
+                                validateSecurityAnswer = {this.validateSecurityAnswer}
+                                setHeaderTitle = {this.handleChangeHeaderTitle}
+                                changePassword = {this.handleChangePassword} />
                 break;          
         }
         this.setState({
-            CurrentComponent: Component,
-            selectedMenu: menuTitle
+            CurrentComponent: null   //so that if we want to rerender the same component, react shouldn't stop us.
+        }, ()=>{
+            this.setState({
+                CurrentComponent: Component,
+                selectedMenu: menuTitle
+            });
         });
         
     }

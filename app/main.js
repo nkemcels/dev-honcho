@@ -40,28 +40,56 @@ function getAllUserDataRequest(event){
 function getResponse(data, error){
     return {
         result: error?"FAILED":"OK",
-        payload: data?data:error
+        payload: data,
+        error
     }
+}
+
+function userExists(userName){
+    const users = require("./res/auth").getAllUsers();
+    for (let user of users){
+        if (user.userName == userName){
+            return true;
+        }
+    }
+    return false;
 }
 
 function createNewUserRequest(event, args){
     const {userName} = args;
-    const users = require("./res/auth").getAllUsers();
-    for (let user of users){
-        if (user.userName == userName){
-            event.sender.send("create-new-user-response", getResponse(null, "User Already Exists"));
-            return;
-        }
+    if(userExists(userName)){
+        event.sender.send("create-new-user-response", getResponse(null, "User Already Exists"));
+        return;
     }
     args.password = getHashedString(args.password);
     args.securityAnswer = getHashedString(args.securityAnswer);
     const auth = require("./res/auth");
-    auth.addNewUser(args, function(allUsers){
-        event.sender.send("create-new-user-response", getResponse(allUsers));
-    }, function(error){
-        event.sender.send("create-new-user-response", getResponse(null, error));
+    auth.addNewUser(args, function(allUsers, error){
+        if(error){
+            event.sender.send("create-new-user-response", getResponse(null, error));
+        }else{
+            event.sender.send("create-new-user-response", getResponse(allUsers));
+        }
     })
+}
+
+function changeUserPassword(event, args){
+    const {userName} = args;
+    const auth = require("./res/auth");
+    if(userExists(userName)){
+        args.newPassword = getHashedString(args.newPassword);
+        auth.updateUserPassword(userName, args.newPassword, function(allUsers, error){
+            if(error){
+                event.sender.send("change-user-password-response", getResponse(null, error));
+            }else{
+                event.sender.send("change-user-password-response", getResponse(allUsers));
+            }
+        });
+    }else{
+        event.sender.send("change-user-password-response", getResponse(null, "User does not exists"));
+    }
 }
 
 ipc.on("user-data-request", getAllUserDataRequest)
 ipc.on("create-new-user", createNewUserRequest)
+ipc.on("change-user-password", changeUserPassword)
