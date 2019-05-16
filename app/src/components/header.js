@@ -1,4 +1,5 @@
 import React from "react";
+import {Dropdown} from "semantic-ui-react";
 
 export default class HeaderComp extends React.Component{
     constructor(props){
@@ -31,9 +32,20 @@ export default class HeaderComp extends React.Component{
                     <div className="current-user">
                         <span className="glyphicon glyphicon-user current-user-icon" />
                         <span className="current-user-name">
-                            {this.props.currentUser?
-                                this.props.currentUser:""
-                            }
+                            <Dropdown text={this.props.currentUser?this.props.currentUser:""} pointing icon={null}>
+                                <Dropdown.Menu style={{right:0, left:"auto"}}>
+                                    <Dropdown.Item className="current-user-menu-item">
+                                        <span className="glyphicon glyphicon-cog"/>
+                                        <span>Settings</span>
+                                    </Dropdown.Item>
+                                    <Dropdown.Divider />
+                                    <Dropdown.Item className="current-user-menu-item">
+                                        <span className="glyphicon glyphicon-log-out"/>
+                                        <span>Logout</span>
+                                    </Dropdown.Item>
+                                </Dropdown.Menu>
+                            </Dropdown>
+                            
                         </span>
                     </div>
                 </div>

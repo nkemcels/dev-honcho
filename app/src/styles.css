@@ -48,7 +48,7 @@
 
 .app-header-content>.current-user{
     line-height: 2.5em;
-    margin-right: 10px
+    margin-right: 30px
 }
 
 .app-header-content>.current-user>.current-user-icon{
@@ -66,6 +66,21 @@
     color: #BBDEFB;
     text-decoration: underline;
     cursor: pointer;
+}
+
+.current-user-menu-item{
+    display: flex;
+    align-items: center;
+    padding-left: 5px;
+    padding-right: 5px; 
+}
+
+.current-user-menu-item>span:first-child{
+    margin-right: 5px;
+}
+
+.current-user-menu-item>span{
+    font-size: 12px;
 }
 
 

@@ -15,7 +15,7 @@ export default class HomeView extends React.Component{
                             <Grid.Column>
                                 <Header icon>
                                     <img src={fileSysIcon} style={{width:"100px", height:"75px"}} /><br />
-                                    Your Server's File System
+                                    Browse your Server's File System
                                 </Header>
 
                                 <Button primary size="big">Launch</Button>
@@ -32,7 +32,7 @@ export default class HomeView extends React.Component{
                             <Grid.Column>
                                 <Header icon>
                                     <img src={terminalIcon} style={{width:"100px", height:"75px"}} /><br />
-                                    Access the terminal
+                                    Access the Terminal
                                 </Header>
                                 <Button primary size="big">Launch</Button>
                             </Grid.Column>
