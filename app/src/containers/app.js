@@ -27,7 +27,8 @@ export default class AppContainer extends React.Component{
     /**
      * Gets all the user login info and saves it in the state.
      */
-    handleReceiveUserData = (evt, data, redirectToSignIn=false)=>{
+    handleReceiveUserData = (evt, response, redirectToSignIn=false)=>{
+        const data = response.payload;
         this.setState({
             authData: (data && data instanceof Array && data.length>0)? data : [],
         }, ()=>{

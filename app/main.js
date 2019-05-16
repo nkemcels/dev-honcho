@@ -7,8 +7,12 @@ const {getHashedString} = require("./src/utils/helpers")
 const app = electron.app
 const BrowserWindow = electron.BrowserWindow;
 
-let window;
+let window;  //the main window for the renderer process.
 
+/**
+ * Creates, Initializes, Configures and Loads the main app renderer process.
+ * 
+ */
 function createMainWindow(){
     window = new BrowserWindow({
         width:1150,
@@ -32,11 +36,17 @@ app.on("ready", createMainWindow)
 /***************************************** 
  *  Inter-Process Communication methods  *
  *****************************************/
-function getAllUserDataRequest(event){
+
+ /**
+  * Main IPC listener to send the user authentication data
+  * @param {Event} event 
+  */
+function getAllUserAuthDataRequest(event){
     const data = require("./res/auth").getAllUsers();
-    event.sender.send("user-data-response", data)
+    event.sender.send("user-data-response", getResponse(data))
 }
 
+//simple helper function to parse responses sent to the renderer process via ipc
 function getResponse(data, error){
     return {
         result: error?"FAILED":"OK",
@@ -45,6 +55,11 @@ function getResponse(data, error){
     }
 }
 
+/**
+ * Checks for the existence of a user. 
+ * Returns true if user exists and false otherwise
+ * @param {string} userName 
+ */
 function userExists(userName){
     const users = require("./res/auth").getAllUsers();
     for (let user of users){
@@ -55,6 +70,24 @@ function userExists(userName){
     return false;
 }
 
+/**
+ * Main IPC listener to create a new user. 
+ * The args object is expected to contain the following fields:
+ * ```
+ * {
+ *    userName,
+ *    password,
+ *    securityQuestion,
+ *    securityAnswer
+ * }
+ * ```
+ * The passwords and security answers are hashed with the sha512 hashing algorithms.
+ * the `create-new-user-response` channel is used to respond to the renderer process that
+ * initiated the request. The response either contains a list of all the users (if the user creation was sucessfull),
+ * or an error message otherwise.
+ * @param {Event} event 
+ * @param {Object} args 
+ */
 function createNewUserRequest(event, args){
     const {userName} = args;
     if(userExists(userName)){
@@ -73,6 +106,19 @@ function createNewUserRequest(event, args){
     })
 }
 
+/**
+ * IPC Main Listener for changing the password of a given user. 
+ * The args object is contains the user name for who's password is to be changed and equally the new password.
+ * Its fields must be as follows:
+ * ```
+ * {
+ *   userName,
+ *   newPassword
+ * }
+ * ```
+ * @param {Event} event 
+ * @param {string} args 
+ */
 function changeUserPassword(event, args){
     const {userName} = args;
     const auth = require("./res/auth");
@@ -90,6 +136,17 @@ function changeUserPassword(event, args){
     }
 }
 
-ipc.on("user-data-request", getAllUserDataRequest)
+/**
+ * IPC Main Channel to get all user authentication data
+ */
+ipc.on("user-data-request", getAllUserAuthDataRequest)
+
+/**
+ * IPC Main Channel to create a new user
+ */
 ipc.on("create-new-user", createNewUserRequest)
+
+/**
+ * IPC Main Channel to change user password
+ */
 ipc.on("change-user-password", changeUserPassword)
