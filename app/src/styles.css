@@ -110,3 +110,8 @@ footer{
     left: 0;
     right: 0;
 }
+
+.md-icon{
+    width: 128px;
+    height: 100px;
+}

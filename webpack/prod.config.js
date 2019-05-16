@@ -17,6 +17,10 @@ module.exports={
                 test: /\.(css|scss)$/,
                 exclude: /node_modules/,
                 loaders: ["style-loader", "css-loader"]
+            },
+            {
+                test: /\.(png|jpg)/,
+                loader:"file-loader"
             }
         ]
     },
