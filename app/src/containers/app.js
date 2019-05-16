@@ -20,10 +20,14 @@ export default class AppContainer extends React.Component{
         this.loadUserAuthData(true);
     }
 
+    /**
+     * Loads user authentication data through the user-auth-data-request ipc channel. 
+     */
     loadUserAuthData = (redirectToSignIn=false)=>{
-        ipc.send("user-data-request");
-        ipc.once("user-data-response", (evt, data)=>this.handleReceiveUserData(evt, data, redirectToSignIn))
+        ipc.send("user-auth-data-request");
+        ipc.once("user-auth-data-response", (evt, data)=>this.handleReceiveUserData(evt, data, redirectToSignIn))
     }
+    
     /**
      * Gets all the user login info and saves it in the state.
      */

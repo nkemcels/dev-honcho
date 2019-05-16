@@ -11,12 +11,17 @@ export default class SignInPane extends React.Component{
         newPasswordConfirm:""
     }
     
+    /**
+     * Updates the state values for the controlled input fields 
+     */
     onInputChange = (field, event)=>{
         this.setState({
             [field]:event.target.value
         })
     }
 
+    // helper method to render home view if authentication was successfull
+    // or display an error text otherwise
     handleAuthenticationResponse = (isAuthenticated)=>{
         if(isAuthenticated){
             this.props.renderComponent(HOME_VIEW);
@@ -25,6 +30,9 @@ export default class SignInPane extends React.Component{
         }
     }
 
+    /**
+     * Validates new password fields and submit the password data to be modified for the provided user
+     */
     handleChangePassword = ()=>{
         if(this.isNewPasswordValid()!==true){
             this.displayError("Password provided is invalid")
@@ -41,6 +49,9 @@ export default class SignInPane extends React.Component{
         }
     }
 
+    /**
+     * Main function to handle user input action depending on the selected context (change password, answer security question, etc)
+     */
     handleValidateInput = ()=>{
         if(this.state.changePassword){
             this.handleChangePassword()

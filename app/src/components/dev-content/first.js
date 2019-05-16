@@ -3,6 +3,9 @@ import {Button} from "semantic-ui-react"
 import {NEW_ACCOUNT_PANE} from "../../../constants"
 
 export default class InitialDisplay extends React.Component{
+    /**
+     * Renders the new account creation pane on the main view.
+     */
     handleCreateNewAccount = ()=>{
         this.props.renderComponent(NEW_ACCOUNT_PANE)
     }

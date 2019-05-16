@@ -11,6 +11,10 @@ export default class NewAccountPane extends React.Component{
         userNameError:false,
         passwordError:false
     }
+    /**
+     * Returns a list of available security questions 
+     * @returns Array of objects of security questions
+     */
     getSecurityQuestions = ()=>{
         return [
             {key:"1", text:"What is your favorite meal?", value:"What is your favorite meal?"},
@@ -19,6 +23,11 @@ export default class NewAccountPane extends React.Component{
             {key:"4", text:"Who was your childhood hero?", value:"Who was your childhood hero?"}
         ]
     }
+
+    /**
+     * Returns true if password meets specifications, 
+     * i.e password length is more atleast 6 characters long
+     */
     isPasswordValid = ()=>{
         if(this.state.password){
             if(this.state.password.length>6){
@@ -27,17 +36,28 @@ export default class NewAccountPane extends React.Component{
             return false;
         }
     }
+
+    /**
+     * Returns true if the user name is valid. 
+     * A username must only contain a series of letters and/or numbers
+     */
     isUserNameValid = ()=>{
         if(this.state.userName){
             let re = /^[a-zA-Z0-9]+$/;
             return re.test(this.state.userName)
         }
     }
+
+    /**
+     * Returns true if confirmation password is atleast 6 characters long and 
+     * matches the original password.
+     */
     isConfirmPasswordValid = ()=>{
         if(this.state.confirmPassword){
             return this.isPasswordValid() && this.state.confirmPassword == this.state.password
         }
     }
+
     hasSecurityQuestion = ()=>{
         if(this.state.securityQuestion){
             return true;
@@ -48,6 +68,10 @@ export default class NewAccountPane extends React.Component{
             return this.hasSecurityQuestion();
         }
     }
+
+    /**
+     * Used by the Controlled Input fields to update their values in the state
+     */
     onInputChange = (field, event, value)=>{
         let targetValue = event.target.value
         if (field === "securityQuestion"){
@@ -64,6 +88,10 @@ export default class NewAccountPane extends React.Component{
             })
         })
     }
+
+    /**
+     * Checks if user inputs are valid and hence submits them so as to create a new account/access credentials
+     */
     handleValidateInputs = ()=>{
         let errorMsg = null;
         if(this.isUserNameValid()!==true){
@@ -94,6 +122,9 @@ export default class NewAccountPane extends React.Component{
         else this.handleSubmitUserInputs();
     }
 
+    /**
+     * Submits the user inputs. This method is called after every field meets specs
+     */
     handleSubmitUserInputs = ()=>{
         const qdata = {
             userName: this.state.userName,
@@ -104,6 +135,9 @@ export default class NewAccountPane extends React.Component{
         this.props.createNewUserAndSignIn(qdata, this.handleCreateUserFailed);
     }
 
+    /**
+     * Displays an error if user creation failed.
+     */
     handleCreateUserFailed = (error)=>{
         this.setState({
             errorMsg: error

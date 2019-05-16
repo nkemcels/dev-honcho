@@ -43,7 +43,7 @@ app.on("ready", createMainWindow)
   */
 function getAllUserAuthDataRequest(event){
     const data = require("./res/auth").getAllUsers();
-    event.sender.send("user-data-response", getResponse(data))
+    event.sender.send("user-auth-data-response", getResponse(data))
 }
 
 //simple helper function to parse responses sent to the renderer process via ipc
@@ -139,7 +139,7 @@ function changeUserPassword(event, args){
 /**
  * IPC Main Channel to get all user authentication data
  */
-ipc.on("user-data-request", getAllUserAuthDataRequest)
+ipc.on("user-auth-data-request", getAllUserAuthDataRequest)
 
 /**
  * IPC Main Channel to create a new user
