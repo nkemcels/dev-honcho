@@ -70,6 +70,16 @@ function userExists(userName){
     return false;
 }
 
+function getDefaultSettings(){
+    return {
+        enableLogin: true,
+        secureSettings: false,
+        secureFileSystem: false,
+        secureDevops: false,
+        secureSSH: true
+    }
+}
+
 /**
  * Main IPC listener to create a new user. 
  * The args object is expected to contain the following fields:
@@ -96,6 +106,7 @@ function createNewUserRequest(event, args){
     }
     args.password = getHashedString(args.password);
     args.securityAnswer = getHashedString(args.securityAnswer);
+    args = {...args, ...getDefaultSettings()}
     const auth = require("./res/auth");
     auth.addNewUser(args, function(allUsers, error){
         if(error){
@@ -136,6 +147,24 @@ function changeUserPassword(event, args){
     }
 }
 
+function updateUserAccessCredentials(event, args){
+    const {currentUser} = args;
+    delete args.currentUser;
+    const auth = require("./res/auth");
+    if(userExists(currentUser)){
+        args.password = getHashedString(args.password);
+        auth.updateUserCredentials(currentUser, args, function(allUsers, error){
+            if(error){
+                event.sender.send("update-user-auth-data-response", getResponse(null, error));
+            }else{
+                event.sender.send("update-user-auth-data-response", getResponse(allUsers));
+            }
+        });
+    }else{
+        event.sender.send("update-user-auth-data-response", getResponse(null, "User does not exists"));
+    }
+}
+
 /**
  * IPC Main Channel to get all user authentication data
  */
@@ -150,3 +179,5 @@ ipc.on("create-new-user", createNewUserRequest)
  * IPC Main Channel to change user password
  */
 ipc.on("change-user-password", changeUserPassword)
+
+ipc.on("update-user-auth-data", updateUserAccessCredentials)

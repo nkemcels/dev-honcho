@@ -1,6 +1,7 @@
 import React from "react";
 import {Header, Footer, Pane, InitialContent} from "../components";
-import {NewAccountPane, HomeView, SignInPane} from "../components"
+import {NewAccountPane, HomeView, SignInPane} from "../components";
+import {SettingsPane} from "../components"
 import {getHashedString} from "../utils/helpers"
 import * as constants from "../../constants"
 const ipc = require("electron").ipcRenderer;
@@ -81,43 +82,48 @@ export default class AppContainer extends React.Component{
         }, failureCallback)
     }
 
-    handleAuthenticateUser = (userName, password, callback)=>{
-        let isAuthenticated = false;
-        for (let user of this.state.authData){
-            if (getHashedString(password) === user.password && userName == user.userName){
-                isAuthenticated = true;
-                break;
+    getUserData = (userName) =>{
+        for (let userData of this.state.authData){
+            if (userName == userData.userName){
+                return userData;
             }
         }
+        return null;
+    }
+
+    handleAuthenticateUser = (userName, password, callback)=>{
+        let isAuthenticated = false;
+        let userData = this.getUserData(userName);
+        if(userData && userData.password === getHashedString(password)){
+            isAuthenticated = true;
+            this.setState({
+                currentUser:userName,
+                currentUserPassword: password
+            });
+        }
+        this.setState({
+            isAuthenticated
+        });
         if(callback && callback instanceof Function){
             callback(isAuthenticated);
-            this.setState({
-                isAuthenticated
-            });
-            if(isAuthenticated){
-                this.setState({
-                    currentUser:userName
-                });
-            }
         }
     }
 
     getSecurityQuestion = (userName)=>{
-        for (let user of this.state.authData){
-            if(userName == user.userName){
-                return user.securityQuestion;
-            }
+        let userData = this.getUserData(userName);
+        if(userData){
+            return userData.securityQuestion;
         }
-
+        
         return null;
     }
 
     validateSecurityAnswer = (userName, securityAnswer)=>{
-        for (let user of this.state.authData){
-            if(userName === user.userName){
-                return user.securityAnswer === getHashedString(securityAnswer);
-            }
+        let userData = this.getUserData(userName);
+        if(userData){
+            return userData.securityAnswer === getHashedString(securityAnswer);
         }
+
         return false;
     }
 
@@ -139,6 +145,39 @@ export default class AppContainer extends React.Component{
                 }
             }
         });
+    }
+
+    updateUserAccessCredentials = (user, newAuthData, callback)=>{
+        ipc.send("update-user-auth-data", {currentUser:user, ...newAuthData});
+        ipc.once("update-user-auth-data-response", (event, data)=>{
+            if (callback && callback instanceof Function){
+                if(data.result ==="OK"){
+                    console.log("payload data: ", data.payload)
+                    this.setState({ authData:data.payload }, ()=>{
+                        this.handleAuthenticateUser(newAuthData.userName, newAuthData.password)
+                    });
+                    callback(true);
+                }else{
+                    callback(false, data.error);
+                }
+            }
+        })
+    }
+
+    getSettingsData = (userName)=>{
+        let userData = this.getUserData(userName);
+        if(userData){
+            return {
+                currentUser: this.state.currentUser===userName && userName,
+                currentUserPassword: this.state.currentUser===userName && this.state.currentUserPassword,
+                enableLogin: userData.enableLogin,
+                secureSettings: userData.secureSettings,
+                secureFileSystem: userData.secureFileSystem,
+                secureDevops: userData.secureDevops,
+                secureSSH: userData.secureSSH
+            }
+        }
+        
     }
 
     renderThisComponent = (component, props)=>{
@@ -174,7 +213,15 @@ export default class AppContainer extends React.Component{
                                 validateSecurityAnswer = {this.validateSecurityAnswer}
                                 setHeaderTitle = {this.handleChangeHeaderTitle}
                                 changePassword = {this.handleChangePassword} />
-                break;          
+                break;
+            case constants.SETTINGS_PANE:
+                menuTitle = props && props.menuTitle?props.menuTitle:"SETTINGS";
+                Component = <SettingsPane
+                                {...props}
+                                renderComponent = {this.renderThisComponent}
+                                settingsData = {this.getSettingsData(this.state.currentUser)}
+                                updateUserAccessCredentials = {this.updateUserAccessCredentials} />
+                break;                          
         }
         this.setState({
             CurrentComponent: null   //so that if we want to rerender the same component, react shouldn't stop us.

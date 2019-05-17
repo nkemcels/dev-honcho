@@ -82,8 +82,21 @@ function updateUserPassword(userName, newPassword, callback){
     }
 }
 
+function updateUserCredentials(currentUser, newAuthData, callback){
+    let authData = loadAuthData();
+    authData = authData instanceof Array? authData : []
+    authData = authData.filter((elt, ind)=>elt.userName!==currentUser);
+    authData = [...authData, newAuthData];
+    const fpath = path.join(".", "data", AUTH_TABLE_FILENAME);
+    if( !fs.existsSync(fpath) ){
+        fs.mkdirSync("./data");
+    }
+    writeToFile(fpath, authData, callback)
+}
+
 module.exports = {
     getAllUsers,
     addNewUser,
-    updateUserPassword
+    updateUserPassword,
+    updateUserCredentials
 }

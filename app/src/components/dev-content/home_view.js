@@ -4,8 +4,12 @@ import fileSysIcon from "../../../images/filesys.png";
 import devOpsIcon from "../../../images/devops1.png";
 import terminalIcon from "../../../images/terminal.png";
 import settingsIcon from "../../../images/settings.png";
+import {SETTINGS_PANE} from "../../../constants"
 
 export default class HomeView extends React.Component{
+    handleMenuItemClicked = (menuItem) =>{
+        this.props.renderComponent(menuItem)
+    }
     render(){
         return (
             <div className="match-parent centered-content">
@@ -41,7 +45,7 @@ export default class HomeView extends React.Component{
                                     <img src={settingsIcon} style={{width:"90px", height:"75px"}} /><br />
                                     Configure your Dev-Honcho Settings
                                 </Header>
-                                <Button primary size="big">Launch</Button>
+                                <Button primary size="big" onClick={()=>this.handleMenuItemClicked(SETTINGS_PANE)}>Launch</Button>
                             </Grid.Column>
                         </Grid.Row>
                     </Grid>

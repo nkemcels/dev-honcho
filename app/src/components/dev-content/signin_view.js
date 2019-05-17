@@ -4,7 +4,7 @@ import {HOME_VIEW, SIGNIN_PANE} from "../../../constants"
 
 export default class SignInPane extends React.Component{
     state = {
-        userName: "123",
+        userName: "cels",
         password: "celsoppe",
         securityAnswer: "",
         newPassword:"",
