@@ -20,7 +20,7 @@ export class _ClassicCardPane extends React.Component{
                         {this.props.headerComponent}
                     </Card.Content>
                 </Card.Header>
-                <Card.Content>
+                <Card.Content className={this.props.centerContent?"centered-content":""}>
                     {this.props.children?this.props.children:this.props.component}
                 </Card.Content>
                 {(this.props.attachBottomButton||this.props.bottomButtonText)&&

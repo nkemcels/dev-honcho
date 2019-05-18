@@ -1,5 +1,5 @@
 import React from "react";
-import {Form, Divider} from "semantic-ui-react";
+import {Form, Divider, Segment, Button} from "semantic-ui-react";
 import {ClassicCardPane} from "../index"
 import {SETTINGS_PANE} from "../../../constants"
 
@@ -138,9 +138,16 @@ export default class SettingsPane extends React.Component{
                         headerComponent={<h5>Registered Servers</h5>}
                         matchParent={true}
                         style={{minWidth:"100%", minHeight:"97%"}}
-                        
+                        centerContent={true}
                     >
-                        
+                        <div className="match-parent">
+                            <div className="match-parent centered-content">
+                                <div style={{textAlign:"center"}}>
+                                    <h4>No servers registered for this account</h4>
+                                    <Button primary size="big"> + Add Server</Button>
+                                </div>
+                            </div>
+                        </div>    
                     </ClassicCardPane>            
                 </div>
             </div>
