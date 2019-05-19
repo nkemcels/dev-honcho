@@ -14,20 +14,7 @@ let window;  //the main window for the renderer process.
  * 
  */
 function createMainWindow(){
-    window = new BrowserWindow({
-        width:1150,
-        height:650,
-        webPreferences:{nodeIntegration:true}
-    });
-    window.loadURL(url.format({
-        pathname: path.join(__dirname, ".", "dist", "index.html"),
-        protocol:"file:",
-        slashes: true
-    }));
-    
-    window.on("close", function(){
-        window = null;
-    })
+    window = createWindow(null, "index");
 }
 
 app.on("ready", createMainWindow)
@@ -165,6 +152,53 @@ function updateUserAccessCredentials(event, args){
     }
 }
 
+function createWindow(parent, html, options){
+    options = options? options : {};
+    let window = new BrowserWindow({
+        width:1150,
+        height:650,
+        title:"Dev-Honcho",
+        webPreferences:{nodeIntegration:true},
+        parent,
+        ...options
+    });
+    window.loadURL(url.format({
+        pathname: path.join(__dirname, ".", "dist", `${html}.html`),
+        protocol:"file:",
+        slashes: true
+    }));
+    
+    window.on("close", function(){
+        window = null;
+    });
+    return window;
+}
+
+function openNewServerModalWindow(event, args){
+    const parent = BrowserWindow.fromWebContents(event.sender);
+    let modalWindow = createWindow(parent, "newServerPage", {width:750, height:550, title:"Add New Server"})
+    modalWindow.user = args;
+}
+
+function submitServerInstanceData(event, args){
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if(args!=null){
+        const auth = require("./res/auth");
+        auth.addNewServer(window.user, args, function(data, error){
+            if(error){
+                
+                window.webContents.send("notification", {
+                    type: "FAILURE",
+                    payload: error
+                });
+            }else{
+                window.close()
+            }
+        })
+    }
+    else window.close();
+}
+
 /**
  * IPC Main Channel to get all user authentication data
  */
@@ -181,3 +215,5 @@ ipc.on("create-new-user", createNewUserRequest)
 ipc.on("change-user-password", changeUserPassword)
 
 ipc.on("update-user-auth-data", updateUserAccessCredentials)
+ipc.on("open-new-server-window", openNewServerModalWindow)
+ipc.on("submit-server-instance-data", submitServerInstanceData)

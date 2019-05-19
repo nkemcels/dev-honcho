@@ -180,6 +180,13 @@ export default class AppContainer extends React.Component{
         
     }
 
+    handleOpenNewServerModal = ()=>{
+        ipc.send("open-new-server-window", this.state.currentUser);
+        ipc.once("open-new-server-window-response", ()=>{
+            alert("you can continue")
+        })
+    }
+
     renderThisComponent = (component, props)=>{
         let Component = null; let menuTitle = "";
         switch(component){
@@ -220,7 +227,8 @@ export default class AppContainer extends React.Component{
                                 {...props}
                                 renderComponent = {this.renderThisComponent}
                                 settingsData = {this.getSettingsData(this.state.currentUser)}
-                                updateUserAccessCredentials = {this.updateUserAccessCredentials} />
+                                updateUserAccessCredentials = {this.updateUserAccessCredentials}
+                                openNewServerModal = {this.handleOpenNewServerModal} />
                 break;                          
         }
         this.setState({

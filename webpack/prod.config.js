@@ -1,10 +1,15 @@
 const path = require("path")
+// const mainEntryKey = path.join(__dirname, "..", "app", "src", "index");
+// const secondEntryKey = path.join(__dirname, "..", "app", "src", "newServerIndex");
 module.exports={
     devtool:"source-map",
-    entry: path.join(__dirname, "..", "app", "src", "index.js"),
+    entry:{
+        mainBundle: path.join(__dirname, "..", "app", "src", "index.js"),
+        newServerBundle: path.join(__dirname, "..", "app", "src", "newServerIndex.js")
+    }, 
     output: {
         path: path.join(__dirname, "..", "app", "dist"),
-        filename: "bundle.js"
+        filename: "[name].js"
     },
     module:{
         rules:[

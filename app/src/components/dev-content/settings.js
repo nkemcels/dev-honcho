@@ -50,6 +50,10 @@ export default class SettingsPane extends React.Component{
         });
     }
 
+    handleOpenNewServerModal = ()=>{
+        this.props.openNewServerModal();
+    }
+
     onInputChanged = (field, event, isCheckField)=>{
         this.setState({
             [field]: isCheckField? !this.state[field] : event.target.value
@@ -144,7 +148,7 @@ export default class SettingsPane extends React.Component{
                             <div className="match-parent centered-content">
                                 <div style={{textAlign:"center"}}>
                                     <h4>No servers registered for this account</h4>
-                                    <Button primary size="big"> + Add Server</Button>
+                                    <Button primary size="big" onClick={this.handleOpenNewServerModal}> + Add Server</Button>
                                 </div>
                             </div>
                         </div>    

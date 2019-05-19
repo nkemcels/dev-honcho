@@ -22,7 +22,6 @@ function loadAuthData(){
 
 //Helper function to write object to a file
 function writeToFile(filepath, data, callback){
-    
     fs.writeFile(filepath, JSON.stringify(data), function(err){
         if(err){
             if(callback && callback instanceof Function){
@@ -50,6 +49,34 @@ function addNewUser(userData, callback){
     writeToFile(fpath, loadedData, callback)
 }
 
+function getServerInstance(userName, serverName){
+    let userData = getUserData(userName);
+    if (userData && userData.serverInstances){
+        for(let serverInstance of userData.serverInstances){
+            if(serverInstance.serverName == serverName){
+                return serverInstance;
+            }
+        }
+    }
+
+    return null;
+}
+
+function addNewServer(userName, serverInstanceData, callback){
+    let userData = getUserData(userName);
+    let serverInstance = getServerInstance(userName, serverInstanceData.serverName);
+    if(serverInstance){
+        if(callback && callback instanceof Function){
+            callback(null, "A Server Instance with that name already exist!");
+        }
+    }else{
+        if(!userData.serverInstances){
+            userData.serverInstances = [];
+        }
+        userData.serverInstances = [...userData.serverInstances, serverInstanceData];
+        updateUserCredentials(userName, userData, callback);
+    }
+}
 
 function getAllUsers(){
     return loadAuthData();
@@ -82,6 +109,15 @@ function updateUserPassword(userName, newPassword, callback){
     }
 }
 
+function getUserData(userName){
+    let authData = loadAuthData();
+    for (let user of authData){
+        if (user.userName == userName){
+            return user;
+        }
+    }
+}
+
 function updateUserCredentials(currentUser, newAuthData, callback){
     let authData = loadAuthData();
     authData = authData instanceof Array? authData : []
@@ -96,6 +132,8 @@ function updateUserCredentials(currentUser, newAuthData, callback){
 
 module.exports = {
     getAllUsers,
+    getUserData,
+    addNewServer,
     addNewUser,
     updateUserPassword,
     updateUserCredentials
