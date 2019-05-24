@@ -15,7 +15,7 @@ export default class HomeView extends React.Component{
             <div className="match-parent centered-content">
                 <Segment placeholder size="huge" style={{width:"70%", height:"75%"}}>
                     <Grid textAlign='center'  className="match-parent">
-                        <Grid.Row verticalAlign='middle' columns={2} >
+                        <Grid.Row verticalAlign='middle' columns={2} style={{marginTop:10}}>
                             <Grid.Column>
                                 <Header icon>
                                     <img src={fileSysIcon} style={{width:"100px", height:"75px"}} /><br />
@@ -32,7 +32,7 @@ export default class HomeView extends React.Component{
                                 <Button primary size="big">Launch</Button>
                             </Grid.Column>
                         </Grid.Row>
-                        <Grid.Row verticalAlign='middle' columns={2} >
+                        <Grid.Row verticalAlign='middle' columns={2} style={{marginTop:25, marginBottom:10}}>
                             <Grid.Column>
                                 <Header icon>
                                     <img src={terminalIcon} style={{width:"100px", height:"75px"}} /><br />

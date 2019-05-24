@@ -17,7 +17,7 @@ export default class HeaderComp extends React.Component{
             {this.props.isAuthenticated?
                 <div className='app-header-content'>
                     <div className="current-server">
-                        <span className="glyphicon glyphicon-menu-hamburger menu-icon" />
+                        <span className="glyphicon glyphicon-menu-hamburger menu-icon" onClick={this.props.toggleSideBar} />
                         <span className="current-server-name">
                             {this.props.currentServer?
                                 this.props.currentServer : ""

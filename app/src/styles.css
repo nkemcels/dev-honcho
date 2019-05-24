@@ -85,6 +85,17 @@
     font-size: 12px;
 }
 
+.sidebar-menuitem{
+    font-size: 15px;
+    padding: 5px;
+    color: #BBDEFB;
+}
+
+.sidebar-menuitem>span.glyphicon{
+    margin-right: 7px;
+}
+
+
 
 /******************
  *  FOOTER STYLES *

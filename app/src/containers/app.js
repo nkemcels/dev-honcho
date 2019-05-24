@@ -1,6 +1,7 @@
 import React from "react";
 import {Header, Footer, Pane, InitialContent} from "../components";
 import {NewAccountPane, HomeView, SignInPane} from "../components";
+import { Menu, Sidebar } from 'semantic-ui-react'
 import {SettingsPane} from "../components"
 import {getHashedString} from "../utils/helpers"
 import * as constants from "../../constants"
@@ -15,7 +16,9 @@ export default class AppContainer extends React.Component{
             selectedMenu: null,
             authData: [],
             isAuthenticated: false,
-            CurrentComponent: null
+            sidebarVisibility: false,
+            CurrentComponent: null,
+            currentComponentName:null
         }
 
         this.loadUserAuthData(true);
@@ -93,7 +96,7 @@ export default class AppContainer extends React.Component{
         }, failureCallback)
     }
 
-    getUserData = (userName) =>{
+    getUserData = (userName) => {
         for (let userData of this.state.authData){
             if (userName == userData.userName){
                 return userData;
@@ -205,13 +208,14 @@ export default class AppContainer extends React.Component{
     }
 
     _handleDefaultResponse = (data, callback)=>{
-        if(callback && callback instanceof Function){
-            callback(data);
-            if(data.result==="OK"){
-                this.setState({ authData:data.payload }, ()=>{
+        if(data.result==="OK"){
+            this.setState({ authData:data.payload }, ()=>{
+                if(callback && callback instanceof Function){
                     callback(true);
-                });
-            }else{ callback(false); }
+                }
+            });
+        }else if(callback && callback instanceof Function){ 
+            callback(false);
         }
     }
 
@@ -275,29 +279,138 @@ export default class AppContainer extends React.Component{
         }
         if(Component!=null){
             this.setState({
-                CurrentComponent: null   //so that if we want to rerender the same component, react shouldn't stop us.
+                CurrentComponent: null,   //so that if we want to rerender the same component, react shouldn't stop us.
+                currentComponentName:null
             }, ()=>{
                 this.setState({
                     CurrentComponent: Component,
+                    currentComponentName:component,
                     selectedMenu: menuTitle
                 });
             });
         }
+        this.setState({sidebarVisibility:false})
+    }
+
+    getUserServerInstances = (userName)=>{
+        const userData = this.getUserData(userName);
+        return userData ? userData.serverInstances:null;
+    }
+
+    getUserServerInstance = (userName, serverName)=>{
+        const serverInstances = this.getUserServerInstances(userName);
+        for(let serverInstance of serverInstances){
+            if(serverInstance.serverName === serverName){
+                return serverInstance;
+            }
+        }
+    }
+
+    setCurrentServer = (serverName)=>{
+        this.setState({
+            currentServer: serverName
+        });
+    }
+
+    handleToggleSideBar = ()=>{
+        this.setState({
+            sidebarVisibility:!this.state.sidebarVisibility
+        });
     }
 
     render(){
+        const serverInstances = this.getUserServerInstances(this.state.currentUser);
         return (
             <div className="app-container">
                 <Header 
                     currentServer={this.state.currentServer}
                     currentUser={this.state.currentUser}
                     selectedMenu={this.state.selectedMenu}
-                    isAuthenticated = {this.state.isAuthenticated} />
-                <Pane>
-                    {
-                        this.state.CurrentComponent
-                    }
-                </Pane>
+                    isAuthenticated = {this.state.isAuthenticated}
+                    toggleSideBar = {this.handleToggleSideBar} />
+                <div className="pane">
+                    <Sidebar.Pushable >
+                        <Sidebar
+                            as={Menu}
+                            animation='overlay'
+                            icon='labeled'
+                            inverted
+                            onHide={()=>this.setState({sidebarVisibility:false})}
+                            vertical
+                            visible={this.state.sidebarVisibility}
+                            style={{padding:7}}
+                            width="wide"
+                        >
+                            <Menu style={{backgroundColor:"#212121"}}>
+                                {serverInstances?
+                                    <b style={{fontSize:15,color:"#E0E0E0"}} className="pull-left">Server Instances</b> : <b style={{fontSize:15, color:"#E0E0E0"}} className="pull-left">No Server Instances</b>
+                                }
+                            </Menu>
+                            {serverInstances && serverInstances instanceof Array&&
+                                serverInstances.map((elt, indx)=>{
+                                    return (
+                                        <Menu.Item as='a' position="left" onClick={()=>{this.setCurrentServer(elt.serverName); this.setState({sidebarVisibility:false})}}>
+                                            <span className="sidebar-menuitem" style={{width:"100%"}}>
+                                                <span className="glyphicon glyphicon-triangle-right pull-left"/>
+                                                <span className="pull-left">{elt.serverName}</span>
+                                                <a 
+                                                    className="btn btn-xs btn-primary pull-right" 
+                                                    onClick={(evt)=>{evt.stopPropagation();this.renderThisComponent(
+                                                                    constants.NEW_SERVER_INSTANCE_WINDOW, 
+                                                                    this.getUserServerInstance(this.state.currentUser, elt.serverName),
+                                                                    ()=>{ if(this.state.currentComponentName === constants.SETTINGS_PANE){
+                                                                            this.renderThisComponent(constants.SETTINGS_PANE);
+                                                                        }}
+                                                    )}}> Edit </a>
+                                            </span> 
+                                        </Menu.Item>
+                                    )
+                                })
+                            }
+                            <Menu style={{backgroundColor:"#212121"}}>
+                                <b style={{fontSize:15,color:"#E0E0E0"}} className="pull-left">Main Items</b>
+                            </Menu>
+                            <Menu.Item as='a'>
+                                <span className="sidebar-menuitem" style={{marginLeft:5}}>
+                                    <span className="glyphicon glyphicon-duplicate pull-left"/>
+                                    <span className="pull-left">File System</span> 
+                                </span>
+                            </Menu.Item>
+                            <Menu.Item as='a'>
+                                <span className="sidebar-menuitem" style={{marginLeft:5}}>
+                                    <span className="glyphicon glyphicon-hdd pull-left"/>
+                                    <span className="pull-left">Manage Deployments</span> 
+                                </span>
+                            </Menu.Item>
+                            <Menu.Item as='a'>
+                                <span className="sidebar-menuitem" style={{marginLeft:5}}>
+                                    <span className="glyphicon glyphicon-console pull-left"/>
+                                    <span className="pull-left">Terminal</span> 
+                                </span>
+                            </Menu.Item>
+                            <Menu.Item as='a' onClick={()=>this.renderThisComponent(constants.SETTINGS_PANE)}>
+                                <span className="sidebar-menuitem" style={{marginLeft:5}}>
+                                    <span className="glyphicon glyphicon-cog pull-left"/>
+                                    <span className="pull-left">Settings</span> 
+                                </span>
+                            </Menu.Item>
+                            <Menu.Item as='a' onClick={()=>this.renderThisComponent(constants.HOME_VIEW)}>
+                                <span className="sidebar-menuitem" style={{marginLeft:5}}>
+                                    <span className="glyphicon glyphicon-home pull-left"/>
+                                    <span className="pull-left">Home</span> 
+                                </span>
+                            </Menu.Item>    
+                        </Sidebar>
+
+                        <Sidebar.Pusher style={{width:"100%", height:"100%"}} className="centered-content" dimmed={this.state.sidebarVisibility}>
+                            <div className="match-parent">
+                                {
+                                    this.state.CurrentComponent
+                                }
+                            </div>
+                        </Sidebar.Pusher>
+                    </Sidebar.Pushable>
+                </div>
                 <Footer />
             </div>
         )
