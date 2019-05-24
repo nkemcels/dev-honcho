@@ -1,8 +1,9 @@
-const electron = require("electron")
-const url = require("url")
-const path = require("path")
+const electron = require("electron");
+const url = require("url");
+const path = require("path");
 const ipc = require("electron").ipcMain;
-const {getHashedString} = require("./src/utils/helpers")
+const {getHashedString} = require("./src/utils/helpers");
+const constants = require("./constants");
 
 const app = electron.app
 const BrowserWindow = electron.BrowserWindow;
@@ -140,7 +141,7 @@ function updateUserAccessCredentials(event, args){
     const auth = require("./res/auth");
     if(userExists(currentUser)){
         args.password = getHashedString(args.password);
-        auth.updateUserCredentials(currentUser, args, function(allUsers, error){
+        auth.updateUserAuthCredentials(currentUser, args, function(allUsers, error){
             if(error){
                 event.sender.send("update-user-auth-data-response", getResponse(null, error));
             }else{
@@ -174,46 +175,112 @@ function createWindow(parent, html, options){
     return window;
 }
 
-function openNewServerModalWindow(event, args){
+function openModalWindow(event, args){
     const parent = BrowserWindow.fromWebContents(event.sender);
-    let modalWindow = createWindow(parent, "newServerPage", {width:750, height:550, title:"Add New Server"})
-    modalWindow.user = args;
+    const page = args.windowType == constants.NEW_SERVER_INSTANCE_WINDOW? "newServerPage":
+                 args.windowType == constants.NEW_APP_INSTANCE_WINDOW? "newAppPage": null;
+    let modalWindow = createWindow(parent, page, {width:800, height:600, title:"Add New Server"})    
+    modalWindow.user = args.user;
+    modalWindow.windowType = args.windowType;
+    modalWindow.props = args.props;    
 }
 
-function submitServerInstanceData(event, args){
+function submitModalWindowResponse(event, args){
     const window = BrowserWindow.fromWebContents(event.sender);
     if(args!=null){
-        const auth = require("./res/auth");
-        auth.addNewServer(window.user, args, function(data, error){
-            if(error){
-                
-                window.webContents.send("notification", {
-                    type: "FAILURE",
-                    payload: error
-                });
-            }else{
-                window.close()
-            }
-        })
+        switch(window.windowType){
+            case constants.NEW_SERVER_INSTANCE_WINDOW:
+                handleServerInstanceModalWindowResponse(args, window);
+                break;
+            case constants.NEW_APP_INSTANCE_WINDOW:
+                handleServerInstanceAppModalWindowResponse(args, window);
+                break;    
+        }
     }
     else window.close();
+}
+
+function handleServerInstanceModalWindowResponse(args, window){
+    const auth = require("./res/auth");
+    const serverInstanceName = args.isToUpdate? window.props.serverName : null;
+    delete args.isToUpdate;
+
+    auth.updateServerInstance(window.user, serverInstanceName, args, function(data, error){
+        console.log("data is ", data, " and error is ", error);
+        if(error){
+            window.webContents.send("notification", getResponse(null, error));
+        }else{
+            window.getParentWindow().webContents.send("open-modal-window-response", getResponse(data, null));
+            window.close();
+        }
+    });
+}
+
+function handleServerInstanceAppModalWindowResponse(args, window){
+    const auth = require("./res/auth");
+    const serverInstanceName = args.serverName;
+    const serverInstanceApp = args.isToUpdate? window.props.appName : null;
+    console.log("window.props: ", window.props)
+    delete args.isToUpdate;
+    delete args.serverName;
+
+    auth.updateServerInstanceApp(window.user, serverInstanceName, serverInstanceApp, args, function(data, error){
+        if(error){
+            window.webContents.send("notification", getResponse(null, error));
+        }else{
+            window.getParentWindow().webContents.send("open-modal-window-response", getResponse(data, null));
+            window.close();
+        }
+    });
+}
+
+function deleteServerInstance(event, args){
+    const auth = require("./res/auth");
+    const window = BrowserWindow.fromWebContents(event.sender);
+    auth.deleteServerInstance(args.user, args.serverName, function(data, error){
+        if(error){
+            window.webContents.send("notification", getResponse(null, error));
+        }else{
+            window.webContents.send("delete-server-instance-response", getResponse(data, null));
+        }
+    });
+}
+
+function deleteServerInstanceApp(event, args){
+    const auth = require("./res/auth");
+    const window = BrowserWindow.fromWebContents(event.sender);
+    auth.deleteServerInstanceApp(args.user, args.serverName, args.appName, function(data, error){
+        if(error){
+            window.webContents.send("notification", getResponse(null, error));
+        }else{
+            window.webContents.send("delete-server-instance-app-response", getResponse(data, null));
+        }
+    });
+}
+
+function sendModalWindowProps(event, args){
+    const window = BrowserWindow.fromWebContents(event.sender);
+    window.webContents.send("get-modal-window-props-response", getResponse(window.props));
 }
 
 /**
  * IPC Main Channel to get all user authentication data
  */
-ipc.on("user-auth-data-request", getAllUserAuthDataRequest)
+ipc.on("user-auth-data-request", getAllUserAuthDataRequest);
 
 /**
  * IPC Main Channel to create a new user
  */
-ipc.on("create-new-user", createNewUserRequest)
+ipc.on("create-new-user", createNewUserRequest);
 
 /**
  * IPC Main Channel to change user password
  */
-ipc.on("change-user-password", changeUserPassword)
+ipc.on("change-user-password", changeUserPassword);
 
-ipc.on("update-user-auth-data", updateUserAccessCredentials)
-ipc.on("open-new-server-window", openNewServerModalWindow)
-ipc.on("submit-server-instance-data", submitServerInstanceData)
+ipc.on("update-user-auth-data", updateUserAccessCredentials);
+ipc.on("open-modal-window", openModalWindow);
+ipc.on("get-modal-window-props", sendModalWindowProps)
+ipc.on("open-modal-window-response", submitModalWindowResponse);
+ipc.on("delete-server-instance", deleteServerInstance)
+ipc.on("delete-server-instance-app", deleteServerInstanceApp)

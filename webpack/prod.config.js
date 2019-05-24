@@ -5,7 +5,8 @@ module.exports={
     devtool:"source-map",
     entry:{
         mainBundle: path.join(__dirname, "..", "app", "src", "index.js"),
-        newServerBundle: path.join(__dirname, "..", "app", "src", "newServerIndex.js")
+        newServerBundle: path.join(__dirname, "..", "app", "src", "newServerIndex.js"),
+        newAppBundle: path.join(__dirname, "..", "app", "src", "newAppIndex.js")
     }, 
     output: {
         path: path.join(__dirname, "..", "app", "dist"),

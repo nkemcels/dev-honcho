@@ -1,7 +1,8 @@
 import React from "react";
 import {Form, Divider, Segment, Button} from "semantic-ui-react";
-import {ClassicCardPane} from "../index"
-import {SETTINGS_PANE} from "../../../constants"
+import {ClassicCardPane} from "../index";
+import {BootDropDown} from "../widgets"
+import {SETTINGS_PANE, NEW_SERVER_INSTANCE_WINDOW, NEW_APP_INSTANCE_WINDOW} from "../../../constants"
 
 export default class SettingsPane extends React.Component{
     constructor(props){
@@ -18,6 +19,7 @@ export default class SettingsPane extends React.Component{
             secureDevops: props.settingsData.secureDevops,
             secureSSH: props.settingsData.secureSSH
         }
+        
     }
 
     shouldUpdateAccessCredentials = ()=>{
@@ -31,8 +33,8 @@ export default class SettingsPane extends React.Component{
                 this.state.secureSSH !== props.settingsData.secureSSH);
     }
 
-    handleUpdateAccessCredentials = ()=>{
-        const data = {
+    getServerInstanceSaveData = ()=>{
+        return {
             userName: this.state.userName,
             password: this.state.password,
             enableLogin: this.state.enableLogin,
@@ -41,17 +43,33 @@ export default class SettingsPane extends React.Component{
             secureDevops: this.state.secureDevops,
             secureSSH: this.state.secureSSH
         }
+    }
+
+    displayError=(error)=>{
+        this.setState({errorMsg:error}, ()=>{
+            setTimeout(() => {
+                this.setState({errorMsg:null});
+            }, 5000);
+        });
+    }
+
+    handleUpdateAccessCredentials = ()=>{
+        const data = this.getServerInstanceSaveData();
         this.props.updateUserAccessCredentials(this.props.settingsData.currentUser, data, (didUpdate, error)=>{
             if(didUpdate){
                 this.props.renderComponent(SETTINGS_PANE);
             }else{
-                alert("Update failed because of "+error);
+                this.displayError(error);
             }
         });
     }
 
     handleOpenNewServerModal = ()=>{
-        this.props.openNewServerModal();
+        this.props.renderComponent(NEW_SERVER_INSTANCE_WINDOW, null, (response)=>{
+            if(response){
+                this.props.renderComponent(SETTINGS_PANE);
+            }
+        });
     }
 
     onInputChanged = (field, event, isCheckField)=>{
@@ -59,8 +77,56 @@ export default class SettingsPane extends React.Component{
             [field]: isCheckField? !this.state[field] : event.target.value
         })
     }
+
+    handleAddApp = (serverName)=>{
+        this.props.renderComponent(NEW_APP_INSTANCE_WINDOW, {serverName}, (response)=>{
+            if(response){
+                this.props.renderComponent(SETTINGS_PANE);
+            }
+        })
+    }
+
+    handleDeleteServerInstance = (serverName)=>{
+        this.props.deleteServerInstance(serverName, (response)=>{
+            if(response){
+                this.props.renderComponent(SETTINGS_PANE);
+            }else{
+                this.displayError("Could not delete Server Instance.")
+            }
+        });
+    }
+
+    handleEditServerInfo = (serverInfo)=>{
+        const dataProps = serverInfo;
+        this.props.renderComponent(NEW_SERVER_INSTANCE_WINDOW, dataProps, (response)=>{
+            if(response){
+                this.props.renderComponent(SETTINGS_PANE);
+            }
+        });
+    }
+
+    handleEditServerAppInfo = (appInfo, serverName)=>{
+        const dataProps = {serverName, ...appInfo};
+        this.props.renderComponent(NEW_APP_INSTANCE_WINDOW, dataProps, (response)=>{
+            if(response){
+                this.props.renderComponent(SETTINGS_PANE);
+            }
+        });
+    }
+
+    handleDeleteServerInstanceApp = (serverName, appName)=>{
+        this.props.deleteServerInstanceApp(serverName, appName, (response)=>{
+            if(response){
+                this.props.renderComponent(SETTINGS_PANE);
+            }else{
+                this.displayError("Could not delete this App.")
+            }
+        });
+    }
     
     render(){
+        const serverInstances = this.props.settingsData.serverInstances;
+        const hasInstances = Boolean( serverInstances && serverInstances instanceof Array && serverInstances.length>0 )
         return(
             <div className="match-parent">
                 <div className="col-md-3 hidden-sm hidden-xs" style={{height:"100%"}}>
@@ -142,15 +208,62 @@ export default class SettingsPane extends React.Component{
                         headerComponent={<h5>Registered Servers</h5>}
                         matchParent={true}
                         style={{minWidth:"100%", minHeight:"97%"}}
-                        centerContent={true}
+                        centerContent={!hasInstances}
                     >
                         <div className="match-parent">
-                            <div className="match-parent centered-content">
-                                <div style={{textAlign:"center"}}>
-                                    <h4>No servers registered for this account</h4>
-                                    <Button primary size="big" onClick={this.handleOpenNewServerModal}> + Add Server</Button>
+                        {hasInstances?
+                            <div style={{display:"flex", flexDirection:"column"}} className="match-parent">
+                                <div style={{flexGrow:1}}>
+                                    {serverInstances.map((instance, ind)=>{
+                                        return (
+                                            <Segment color="grey" size="huge">
+                                                <div style={{display:"inline-block"}}>
+                                                    <b style={{fontSize:14}}>{instance.serverName}</b>
+                                                </div>
+                                                <div style={{display:"inline-block"}} className="pull-right">
+                                                    <Button primary onClick={()=>this.handleAddApp(instance.serverName)}>Add App</Button>&emsp;
+                                                    <Button onClick={()=>this.handleEditServerInfo(instance)}>Edit</Button>&emsp;
+                                                    <Button negative onClick={()=>this.handleDeleteServerInstance(instance.serverName)}>Delete</Button>
+                                                </div>
+                                                {instance.apps&&instance.apps instanceof Array&&
+                                                    <div style={{marginLeft:10, marginTop:5}}>
+                                                        <table>
+                                                        {
+                                                            instance.apps.map(app=>(
+                                                                <tr>
+                                                                    <td>
+                                                                        <div style={{display:"inline-block", marginLeft:15, marginBottom:5}}>
+                                                                            <a href="#" className="btn btn-xs btn-default" onClick={()=>this.handleEditServerAppInfo(app, instance.serverName)}>{app.appName}</a>  
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div className="pull-right" style={{marginLeft:5}}>
+                                                                            <a style={{color:"red"}} onClick={()=>this.handleDeleteServerInstanceApp(instance.serverName, app.appName)}>Delete</a>
+                                                                        </div>
+                                                                    </td> 
+                                                                </tr>
+                                                            ))
+                                                        }
+                                                        </table>
+                                                    </div>
+                                                }
+                                            </Segment>
+                                        )
+                                    })}
+                                </div>
+                                <div style={{marginTop:15}}>
+                                    <Button size="big" onClick={this.handleOpenNewServerModal} primary>+ Add Server Instance</Button>
                                 </div>
                             </div>
+                            :
+                            <div className="match-parent centered-content">
+                                <div style={{textAlign:"center"}}>
+                                    <h4>No server instance registered for this account</h4>
+                                    <Button primary size="big" onClick={this.handleOpenNewServerModal}> + Add Server Instance</Button>
+                                </div>
+                            </div>
+                        }
+                            
                         </div>    
                     </ClassicCardPane>            
                 </div>

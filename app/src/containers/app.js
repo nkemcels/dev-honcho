@@ -38,8 +38,19 @@ export default class AppContainer extends React.Component{
             authData: (data && data instanceof Array && data.length>0)? data : [],
         }, ()=>{
             if(redirectToSignIn && this.state.authData.length>0){
-                this.handleChangeHeaderTitle((data && data instanceof Array && data.length>0)? "SIGN-IN" : "DEV-HONCHO")
-                this.renderThisComponent(constants.SIGNIN_PANE)
+                if(this.state.authData[0].enableLogin){
+                    this.handleChangeHeaderTitle((data && data instanceof Array && data.length>0)? "SIGN-IN" : "DEV-HONCHO")
+                    this.renderThisComponent(constants.SIGNIN_PANE)
+                }else{
+                    this.setState({
+                        currentUser: this.state.authData[0].userName,
+                        isAuthenticated: true
+                    }, ()=>{
+                        this.handleChangeHeaderTitle("DEV-HONCHO")
+                        this.renderThisComponent(constants.HOME_VIEW)
+                    })
+                }
+                
             }else if(redirectToSignIn){
                 this.handleChangeHeaderTitle((data && data instanceof Array && data.length>0)? "SIGN-IN" : "DEV-HONCHO")
                 this.renderThisComponent(constants.INITIAL_CONTENT);
@@ -152,16 +163,14 @@ export default class AppContainer extends React.Component{
         ipc.once("update-user-auth-data-response", (event, data)=>{
             if (callback && callback instanceof Function){
                 if(data.result ==="OK"){
-                    console.log("payload data: ", data.payload)
                     this.setState({ authData:data.payload }, ()=>{
                         this.handleAuthenticateUser(newAuthData.userName, newAuthData.password)
+                        callback(true);
                     });
-                    callback(true);
-                }else{
-                    callback(false, data.error);
                 }
+                else{ callback(false, data.error); }
             }
-        })
+        });
     }
 
     getSettingsData = (userName)=>{
@@ -174,20 +183,39 @@ export default class AppContainer extends React.Component{
                 secureSettings: userData.secureSettings,
                 secureFileSystem: userData.secureFileSystem,
                 secureDevops: userData.secureDevops,
-                secureSSH: userData.secureSSH
+                secureSSH: userData.secureSSH,
+                serverInstances: userData.serverInstances
             }
         }
         
     }
 
-    handleOpenNewServerModal = ()=>{
-        ipc.send("open-new-server-window", this.state.currentUser);
-        ipc.once("open-new-server-window-response", ()=>{
-            alert("you can continue")
+    handleDeleteServerInstance = (serverName, callback)=>{
+        ipc.send("delete-server-instance", {user:this.state.currentUser, serverName});
+        ipc.once("delete-server-instance-response", (event, data)=>{
+            this._handleDefaultResponse(data, callback)
         })
     }
 
-    renderThisComponent = (component, props)=>{
+    handleDeleteServerInstanceApp = (serverName, appName, callback)=>{
+        ipc.send("delete-server-instance-app", {user:this.state.currentUser, serverName, appName});
+        ipc.once("delete-server-instance-app-response", (event, data)=>{
+            this._handleDefaultResponse(data, callback)
+        })
+    }
+
+    _handleDefaultResponse = (data, callback)=>{
+        if(callback && callback instanceof Function){
+            callback(data);
+            if(data.result==="OK"){
+                this.setState({ authData:data.payload }, ()=>{
+                    callback(true);
+                });
+            }else{ callback(false); }
+        }
+    }
+
+    renderThisComponent = (component, props, callback)=>{
         let Component = null; let menuTitle = "";
         switch(component){
             case constants.INITIAL_CONTENT:
@@ -228,18 +256,33 @@ export default class AppContainer extends React.Component{
                                 renderComponent = {this.renderThisComponent}
                                 settingsData = {this.getSettingsData(this.state.currentUser)}
                                 updateUserAccessCredentials = {this.updateUserAccessCredentials}
-                                openNewServerModal = {this.handleOpenNewServerModal} />
-                break;                          
+                                openNewServerModal = {this.handleOpenNewServerModal}
+                                deleteServerInstance = {this.handleDeleteServerInstance}
+                                deleteServerInstanceApp = {this.handleDeleteServerInstanceApp} />
+                break;
+            case constants.NEW_SERVER_INSTANCE_WINDOW:
+                ipc.send("open-modal-window", {user:this.state.currentUser, windowType:component, props} );
+                ipc.once("open-modal-window-response", (event, data)=>{
+                    this._handleDefaultResponse(data, callback);
+                });
+                break;
+            case constants.NEW_APP_INSTANCE_WINDOW:
+                ipc.send("open-modal-window", {user:this.state.currentUser, windowType:component, props} );
+                ipc.once("open-modal-window-response", (event, data)=>{
+                    this._handleDefaultResponse(data, callback);
+                });
+                break;                                   
         }
-        this.setState({
-            CurrentComponent: null   //so that if we want to rerender the same component, react shouldn't stop us.
-        }, ()=>{
+        if(Component!=null){
             this.setState({
-                CurrentComponent: Component,
-                selectedMenu: menuTitle
+                CurrentComponent: null   //so that if we want to rerender the same component, react shouldn't stop us.
+            }, ()=>{
+                this.setState({
+                    CurrentComponent: Component,
+                    selectedMenu: menuTitle
+                });
             });
-        });
-        
+        }
     }
 
     render(){

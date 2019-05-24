@@ -127,10 +127,10 @@ export default class NewAccountPane extends React.Component{
      */
     handleSubmitUserInputs = ()=>{
         const qdata = {
-            userName: this.state.userName,
+            userName: this.state.userName.trim(),
             password: this.state.password,
             securityQuestion: this.state.securityQuestion,
-            securityAnswer: this.state.securityAnswer
+            securityAnswer: this.state.securityAnswer.trim()
         }
         this.props.createNewUserAndSignIn(qdata, this.handleCreateUserFailed);
     }

@@ -1,10 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import "./styles.css";
-import NewServerComponent from "./containers/new_server";
+import NewAppComponent from "./containers/new_app";
 
 ReactDOM.render(
     <div className="devhoncho-app">
-        <NewServerComponent />
+        <NewAppComponent />
     </div>, 
 document.getElementById("root"));
