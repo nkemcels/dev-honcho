@@ -4,7 +4,7 @@ import fileSysIcon from "../../../images/filesys.png";
 import devOpsIcon from "../../../images/devops1.png";
 import terminalIcon from "../../../images/terminal.png";
 import settingsIcon from "../../../images/settings.png";
-import {SETTINGS_PANE} from "../../../constants"
+import {SETTINGS_PANE, FILE_SYSTEM_VIEW} from "../../../constants"
 
 export default class HomeView extends React.Component{
     handleMenuItemClicked = (menuItem) =>{
@@ -21,8 +21,7 @@ export default class HomeView extends React.Component{
                                     <img src={fileSysIcon} style={{width:"100px", height:"75px"}} /><br />
                                     Browse your Server's File System
                                 </Header>
-
-                                <Button primary size="big">Launch</Button>
+                                <Button primary size="big"  onClick={()=>this.handleMenuItemClicked(FILE_SYSTEM_VIEW)}>Launch</Button>
                             </Grid.Column>
                             <Grid.Column>
                                 <Header icon>

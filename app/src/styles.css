@@ -1,5 +1,6 @@
 @import "../../node_modules/codemirror/lib/codemirror.css";
 @import "../../node_modules/codemirror/theme/abcdef.css";
+
 /***********************
  *  APP HEADER STYLES  *
  ***********************/
@@ -95,8 +96,45 @@
     margin-right: 7px;
 }
 
+/**************************
+ *   FILE SYSTEM STYLES   *
+ **************************/
 
-
+.fs-container{
+    position: absolute;
+    display: -webkit-flex;
+    display: flex;
+    flex-direction: column;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+.fs-container>.fs-header{
+    height: 3em;
+    border:1px solid black;
+}
+.fs-container>.fs-content{
+    flex-grow: 1;
+    border: 1px solid black;
+}
+.fs-display{
+    border: 1px solid black;
+}
+.fs-quick-access{
+    border: 1px solid black;
+}
+.fs-display>.fs-display-header{
+    height: 3em;
+    border: 1px solid black;
+}
+.fs-display>.fs-display-content{
+    display: flex;
+    flex-wrap: wrap;
+    max-height: calc(100% - 15px);
+    overflow-y: auto;
+    padding-bottom: 50px;
+}
 /******************
  *  FOOTER STYLES *
  ******************/

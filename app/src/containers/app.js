@@ -1,6 +1,6 @@
 import React from "react";
 import {Header, Footer, Pane, InitialContent} from "../components";
-import {NewAccountPane, HomeView, SignInPane} from "../components";
+import {NewAccountPane, HomeView, SignInPane,FileSystemView} from "../components";
 import { Menu, Sidebar } from 'semantic-ui-react'
 import {SettingsPane} from "../components"
 import {getHashedString} from "../utils/helpers"
@@ -14,6 +14,7 @@ export default class AppContainer extends React.Component{
             currentServer: null,
             currentUser: null,
             selectedMenu: null,
+            isServerConnected:false,
             authData: [],
             isAuthenticated: false,
             sidebarVisibility: false,
@@ -264,6 +265,15 @@ export default class AppContainer extends React.Component{
                                 deleteServerInstance = {this.handleDeleteServerInstance}
                                 deleteServerInstanceApp = {this.handleDeleteServerInstanceApp} />
                 break;
+            case constants.FILE_SYSTEM_VIEW:
+                menuTitle = props && props.menuTitle?props.menuTitle:"FILE SYSTEM";
+                Component = <FileSystemView
+                                {...props}
+                                renderComponent = {this.renderThisComponent}
+                                connected = {this.state.isServerConnected}
+                                serverName = {this.state.currentServer}
+                                connectToServer = {(callback)=>this.handleConnectToServer(this.state.currentUser, this.state.currentServer, callback)} />
+                break;                 
             case constants.NEW_SERVER_INSTANCE_WINDOW:
                 ipc.send("open-modal-window", {user:this.state.currentUser, windowType:component, props} );
                 ipc.once("open-modal-window-response", (event, data)=>{
@@ -315,6 +325,22 @@ export default class AppContainer extends React.Component{
     handleToggleSideBar = ()=>{
         this.setState({
             sidebarVisibility:!this.state.sidebarVisibility
+        });
+    }
+
+    handleConnectToServer = (userName, serverName, callback)=>{
+        const serverInstance = this.getUserServerInstance(userName, serverName);
+        ipc.send("connect-to-server", serverInstance);
+        ipc.once("connect-to-server-response", (event, data)=>{
+            if(userName === this.state.currentUser && serverName === this.state.currentServer){
+                this.setState({
+                    isServerConnected: (data.result === "OK")
+                }, ()=>{
+                    if(callback && callback instanceof Function){
+                        callback((data.result === "OK"), data.error);
+                    }
+                });
+            }
         });
     }
 
@@ -370,7 +396,7 @@ export default class AppContainer extends React.Component{
                             <Menu style={{backgroundColor:"#212121"}}>
                                 <b style={{fontSize:15,color:"#E0E0E0"}} className="pull-left">Main Items</b>
                             </Menu>
-                            <Menu.Item as='a'>
+                            <Menu.Item as='a' onClick={()=>this.renderThisComponent(constants.FILE_SYSTEM_VIEW)}>
                                 <span className="sidebar-menuitem" style={{marginLeft:5}}>
                                     <span className="glyphicon glyphicon-duplicate pull-left"/>
                                     <span className="pull-left">File System</span> 

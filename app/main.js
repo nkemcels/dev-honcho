@@ -2,6 +2,7 @@ const electron = require("electron");
 const url = require("url");
 const path = require("path");
 const ipc = require("electron").ipcMain;
+const ssh = require("./ssh")
 const {getHashedString} = require("./src/utils/helpers");
 const constants = require("./constants");
 
@@ -263,6 +264,44 @@ function sendModalWindowProps(event, args){
     window.webContents.send("get-modal-window-props-response", getResponse(window.props));
 }
 
+function connectToServer(event, args){
+    const host = args.ipDns;
+    const username = args.serverUser;
+    const password = args.serverUserPwd;
+    const privateKey = args.pemFilePath;
+    const port = args.sshPort?args.sshPort:22;
+    const authOption = /*args.authOption*/ constants.AUTH_OPTION_PERMISSION_KEY  //for now
+
+    //TODO: Add auth option on the new server page.
+
+
+    let options = {
+        host,
+        username,
+        port
+    }
+
+    if(authOption === constants.AUTH_OPTION_PERMISSION_KEY){
+        options = {...options, privateKey}
+    }
+    else if(authOption === constants.AUTH_OPTION_PASSWORD){
+        options = {...options, password}
+    }
+    else if(authOption === constants.AUTH_OPTION_PERMISSION_KEY_AND_PASSWORD){
+        options = {...options, password, privateKey}
+    } 
+
+    const window = BrowserWindow.fromWebContents(event.sender);
+    ssh.connectToServer(options, function(connected, error){
+        console.log("connected: ", connected, ", error: ", error)
+        if(connected){
+            window.webContents.send("connect-to-server-response", getResponse("CONNECTED"))    
+        }else{
+            window.webContents.send("connect-to-server-response", getResponse(null, error))
+        }
+    });
+}
+
 /**
  * IPC Main Channel to get all user authentication data
  */
@@ -282,5 +321,6 @@ ipc.on("update-user-auth-data", updateUserAccessCredentials);
 ipc.on("open-modal-window", openModalWindow);
 ipc.on("get-modal-window-props", sendModalWindowProps)
 ipc.on("open-modal-window-response", submitModalWindowResponse);
-ipc.on("delete-server-instance", deleteServerInstance)
-ipc.on("delete-server-instance-app", deleteServerInstanceApp)
+ipc.on("delete-server-instance", deleteServerInstance);
+ipc.on("delete-server-instance-app", deleteServerInstanceApp);
+ipc.on("connect-to-server", connectToServer);
