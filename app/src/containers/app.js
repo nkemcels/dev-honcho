@@ -350,7 +350,7 @@ export default class AppContainer extends React.Component{
                                 serverInstances.map((elt, indx)=>{
                                     return (
                                         <Menu.Item as='a' position="left" onClick={()=>{this.setCurrentServer(elt.serverName); this.setState({sidebarVisibility:false})}}>
-                                            <span className="sidebar-menuitem" style={{width:"100%"}}>
+                                            <span className="sidebar-menuitem" style={this.state.currentServer == elt.serverName? {width:"100%", color:"#66BB6A"}:{width:"100%"}}>
                                                 <span className="glyphicon glyphicon-triangle-right pull-left"/>
                                                 <span className="pull-left">{elt.serverName}</span>
                                                 <a 
