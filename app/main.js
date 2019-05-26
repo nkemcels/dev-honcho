@@ -302,6 +302,48 @@ function connectToServer(event, args){
     });
 }
 
+function parseListedFiles(stdout){
+    let results = stdout.split("\n");
+    let processed = []
+    for (let line of results){
+        let fileParts = line.split(" ");
+        if(fileParts.length>=9){
+            const name = fileParts[fileParts.length-1]
+            processed = [...processed, {
+                name,
+                type: name.endsWith("/")||name.endsWith("\\")?"DIRECTORY":"FILE",
+                extension: path.extname(name),
+                size: fileParts[4],
+                metadata: fileParts[0]+" "+fileParts[1]+" "+fileParts[2]+" "+fileParts[3],
+                created : fileParts[5]+" "+fileParts[6]+" "+fileParts[7]
+            }];
+        }
+    }
+
+    return processed;
+}
+
+function performServerOperation(event, args){
+    if(args && args.type){
+        const window = BrowserWindow.fromWebContents(event.sender);
+        switch(args.type){
+            case constants.SERVER_OP_LIST_DIR:
+                ssh.listFiles(args.payload, function(statusOk, stdout, stderr){
+                    if(statusOk){
+                        if(stderr){
+                            window.webContents.send("server-operation-response", getResponse({"error":stderr}));
+                        }else{
+                            let parsedResult = parseListedFiles(stdout);
+                            window.webContents.send("server-operation-response", getResponse(parsedResult));
+                        }
+                    }else{
+                        window.webContents.send("server-operation-response", getResponse(null, stdout));
+                    }
+                });
+        }
+    }
+}
+
 /**
  * IPC Main Channel to get all user authentication data
  */
@@ -324,3 +366,4 @@ ipc.on("open-modal-window-response", submitModalWindowResponse);
 ipc.on("delete-server-instance", deleteServerInstance);
 ipc.on("delete-server-instance-app", deleteServerInstanceApp);
 ipc.on("connect-to-server", connectToServer);
+ipc.on("server-operation", performServerOperation)

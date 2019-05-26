@@ -111,22 +111,38 @@
     bottom: 0;
 }
 .fs-container>.fs-header{
-    height: 3em;
-    border:1px solid black;
+    min-height: 3em;
+    border-bottom: 1px solid rgba(0,0,0,0.15); 
+    box-shadow: 0px 1px 1px rgba(0,0,0,0.1);
 }
 .fs-container>.fs-content{
     flex-grow: 1;
-    border: 1px solid black;
 }
 .fs-display{
-    border: 1px solid black;
+    
 }
 .fs-quick-access{
-    border: 1px solid black;
+    border-right: 1px solid #777;
+}
+.fs-quick-access-header{
+    min-height: 3em;
+    background-color: #6c6c6c;
+    box-shadow: 0px 2px 0px rgba(0,0,0,0.1);
+    text-align: center
+}
+.fs-quick-access-header>h3{
+    color: #E0E0E0;
+    font-size: 15px;
+    font-weight: bold;
+    line-height: 3em;
+}
+.fs-quick-access-item>span{
+    font-size: 17px
 }
 .fs-display>.fs-display-header{
     height: 3em;
-    border: 1px solid black;
+    border-bottom: 1px solid rgba(0,0,0,0.15); 
+    box-shadow: 0px 2px 2px rgba(0,0,0,0.1);
 }
 .fs-display>.fs-display-content{
     display: flex;
@@ -134,6 +150,7 @@
     max-height: calc(100% - 15px);
     overflow-y: auto;
     padding-bottom: 50px;
+    background-color: #F5F5F5
 }
 /******************
  *  FOOTER STYLES *
@@ -185,4 +202,23 @@ footer{
 .codemirror-1{
     display: inline-block;
     width: 400px;
+}
+
+.file-component{
+    position: relative;
+}
+
+.file-component>.glyphicon{
+    text-shadow: 0 0.25px 0 #ccc,
+               0 0.5px 0 #c9c9c9,
+               0 0.75px 0 #bbb,
+               0 1px 0 #b9b9b9,
+               0 1.25px 0 #aaa,
+               0 1.5px 0.25px rgba(0,0,0,.075),
+               0 0 1.25px rgba(0,0,0,.075),
+               0 0.25px 0.75px rgba(0,0,0,.15),
+               0 0.75px 1.25px rgba(0,0,0,.1),
+               0 1.25px 2.5px rgba(0,0,0,.125),
+               0 2.5px 2.5px rgba(0,0,0,.1),
+               0 5px 5px rgba(0,0,0,.10);
 }

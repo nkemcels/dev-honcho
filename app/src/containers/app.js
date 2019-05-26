@@ -220,6 +220,15 @@ export default class AppContainer extends React.Component{
         }
     }
 
+    handleServerOperation = (options, callback)=>{
+        ipc.send("server-operation", options);
+        ipc.once("server-operation-response", (event, data)=>{
+            if(callback && callback instanceof Function){
+                callback(data);
+            }
+        })
+    }
+
     renderThisComponent = (component, props, callback)=>{
         let Component = null; let menuTitle = "";
         switch(component){
@@ -272,6 +281,7 @@ export default class AppContainer extends React.Component{
                                 renderComponent = {this.renderThisComponent}
                                 connected = {this.state.isServerConnected}
                                 serverName = {this.state.currentServer}
+                                serverOperation = {this.handleServerOperation}
                                 connectToServer = {(callback)=>this.handleConnectToServer(this.state.currentUser, this.state.currentServer, callback)} />
                 break;                 
             case constants.NEW_SERVER_INSTANCE_WINDOW:

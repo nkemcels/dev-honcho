@@ -24,8 +24,8 @@ export default class FileComponent extends React.Component{
             highlight:false
         })
     }
-    handleMouseDoubleClicked= ()=>{
-        this.props.fileDoubleClicked(this.props.filepath, this.props.filename, this.props.filetype)
+    handleMouseDoubleClicked= (event)=>{
+        this.props.fileDoubleClicked(this.props.filename, this.props.filetype)
     }
     render(){        
         return (
@@ -33,21 +33,20 @@ export default class FileComponent extends React.Component{
                  onMouseEnter={this.handleMouseEntered} 
                  onMouseLeave={this.handleMouseExited}
                  onDoubleClick={this.handleMouseDoubleClicked}>
-                 {this.props.filetype=='file'?
+                 {this.props.filetype=='FILE'?
                     <div>
-                        <div style={{position:'relative'}}>
+                        <div className="file-component">
                             <span className='glyphicon glyphicon-file' style={{fontSize:45, margin:5, position:'relative'}}/>
                             <span style={{position:'absolute', top:35, left:0, right:0, bottom:0, color:'white', fontSize:10}}><b>{this.props.ext.toUpperCase()}</b></span>
                         </div>
-                        <div style={{fontWeight:'bold', wordWrap:'break-word', textOverflow:'ellipsis', overflow: 'hidden', width:'100%', whiteSpace: 'nowrap', textAlign:'center'}}>{this.props.filename}</div>
+                        <div style={{wordWrap:'break-word', textOverflow:'ellipsis', overflow: 'hidden', width:'100%', whiteSpace: 'nowrap', textAlign:'center'}}>{this.props.filename}</div>
                     </div>
                     :
-                    <div>
+                    <div className="file-component">
                         <span className='glyphicon glyphicon-folder-close' style={{fontSize:45, margin:5}}/><br />
-                        <div style={{fontWeight:'bold', wordWrap:'break-word', textOverflow:'ellipsis', overflow: 'hidden', width:'100%', whiteSpace: 'nowrap', textAlign:'center'}}>{this.props.filename}</div>
+                        <div style={{wordWrap:'break-word', textOverflow:'ellipsis', overflow: 'hidden', width:'100%', whiteSpace: 'nowrap', textAlign:'center'}}>{this.props.filename}</div>
                     </div>
                  }
-                
             </div>
         )
     }
