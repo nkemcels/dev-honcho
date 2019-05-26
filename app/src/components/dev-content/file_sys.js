@@ -120,7 +120,16 @@ export default class FileSystemView extends React.Component{
                 {this.state.connected?
                     <div className="fs-container">
                         <div className="fs-header">
-                            
+                            <div className="fs-header-menu">
+                                <div className="fs-header-menu-item">
+                                    <span className='glyphicon glyphicon-file'/><br />
+                                    <span>New File</span>
+                                </div>
+                                <div className="fs-header-menu-item">
+                                    <span className='glyphicon glyphicon-file'/><br />
+                                    <span>New File</span>
+                                </div>
+                            </div>
                         </div>
                         <div className="fs-content match-parent">
                             <div className="col-md-2" style={{height:"100%", padding:0, margin:0}}>

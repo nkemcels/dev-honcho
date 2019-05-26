@@ -115,6 +115,19 @@
     border-bottom: 1px solid rgba(0,0,0,0.15); 
     box-shadow: 0px 1px 1px rgba(0,0,0,0.1);
 }
+.fs-header-menu{
+    display: flex;
+    flex-direction: row;
+}
+.fs-header-menu-item{
+    display: inline-block;
+    text-align: center;
+    padding:5;
+    margin-left: 3
+}
+.fs-header-menu-item>.glyphicon{
+    font-size:24;
+}
 .fs-container>.fs-content{
     flex-grow: 1;
 }
@@ -149,7 +162,7 @@
     flex-wrap: wrap;
     max-height: calc(100% - 15px);
     overflow-y: auto;
-    padding-bottom: 50px;
+    padding-bottom: 75px;
     background-color: #F5F5F5
 }
 /******************
@@ -204,11 +217,31 @@ footer{
     width: 400px;
 }
 
-.file-component{
+.file-component, .folder-component{
     position: relative;
+    -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+    -moz-user-select: none; /* mozilla browsers */
+    -khtml-user-select: none; /* webkit (konqueror) browsers */
+    -ms-user-select: none; /* IE10+ */
 }
 
 .file-component>.glyphicon{
+    text-shadow: 0 0.15px 0 #ccc,
+               0 0.15px 0 #c9c9c9,
+               0 0.15px 0 #bbb,
+               0 0.5px 0 #b9b9b9,
+               0 0.25px 0 #aaa,
+               0 0.5px 0.15px rgba(0,0,0,.075),
+               0 0 0.75px rgba(0,0,0,.075),
+               0 0.10px 0.25px rgba(0,0,0,.15),
+               0 0.15px 0.25px rgba(0,0,0,.1),
+               0 0.25px 0.5px rgba(0,0,0,.125),
+               0 0.5px 0.5px rgba(0,0,0,.1),
+               0 1.25px 1.25px rgba(0,0,0,.10);
+
+}
+
+.folder-component>.glyphicon{
     text-shadow: 0 0.25px 0 #ccc,
                0 0.5px 0 #c9c9c9,
                0 0.75px 0 #bbb,
@@ -221,4 +254,5 @@ footer{
                0 1.25px 2.5px rgba(0,0,0,.125),
                0 2.5px 2.5px rgba(0,0,0,.1),
                0 5px 5px rgba(0,0,0,.10);
+
 }

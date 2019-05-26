@@ -7,7 +7,7 @@ let connectionArgs = {/*
 };
 
 function connectToServer(options, callback){
-    options = {...options, keepaliveInterval:1000}
+    //options = {...options, keepaliveInterval:1000}
     connectionArgs = options;
     return ssh.connect(options).then(function(){
         if(callback && callback instanceof Function){
