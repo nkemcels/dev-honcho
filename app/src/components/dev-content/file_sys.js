@@ -153,7 +153,10 @@ export default class FileSystemView extends React.Component{
             message: `Enter Name of ${type==constants.SERVER_OP_CREATE_NEW_FILE?"File":"Directory"}`,
             placeholder: `${type==constants.SERVER_OP_CREATE_NEW_FILE?"File":"Directory"} Name`,
             callback: (name)=> {
-                if(name){
+                if(name && this.state.fileList.findIndex(elt=>elt.name==name)>=0){
+                    this.displayAlert(`File '${name}' already exists!`)
+                }
+                else if(name){
                     this.setState({
                         operationMessage: `Creating ${name}...`
                     });
@@ -266,7 +269,7 @@ export default class FileSystemView extends React.Component{
                                 {this.state.operationMessage&&
                                     <div className="fs-header-menu-item operation-message"
                                         style={{marginLeft:40}}>
-                                        {this.state.operationMessage} <Loader size="small" />
+                                        <b>{this.state.operationMessage}</b>
                                     </div>
                                 }
                                 <div style={{flexGrow:1, textAlign:"right"}}>
@@ -347,7 +350,6 @@ export default class FileSystemView extends React.Component{
                                             <Dimmer active>
                                                 <Loader size='large' indeterminate>Listing Files...</Loader>
                                             </Dimmer>
-
                                          }
                                     </div>
                                 </div>
