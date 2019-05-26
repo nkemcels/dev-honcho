@@ -3,11 +3,11 @@ const ssh = new NodeSSH()
 let connectionArgs = {/*
     host: '52.25.188.203',
     username: 'ubuntu',
-    privateKey: '/home/nkemcels/Desktop/web-dev-app.pem'*/
-};
+    privateKey: '/home/nkemcels/Desktop/web-dev-app.pem'
+*/};
 
 function connectToServer(options, callback){
-    //options = {...options, keepaliveInterval:1000}
+    options = {...options, readyTimeout:60000}
     connectionArgs = options;
     return ssh.connect(options).then(function(){
         if(callback && callback instanceof Function){
@@ -22,7 +22,7 @@ function connectToServer(options, callback){
 
 function runCommand(command, cwd, responseCallback, retryCount=2){
     cwd = cwd? cwd:"~";
-    command = [`cd ${cwd}`, command].join("&&");
+    command = [`cd ${cwd.replace(/\s/, "\\ ")}`, command].join("&&");
     console.log("running command ", command)
     const started = new Date().getTime();
     return ssh.execCommand(command).then(function(result) {
@@ -51,8 +51,18 @@ function listFiles(directory, responseCallback, retryCount=2){
     runCommand("ls -l --file-type -h -a .", directory, responseCallback, retryCount)
 }
 
+function createNewFile(filename, directory, responseCallback, retryCount=2){
+    runCommand(`touch ${filename.replace(/\s/, "\\ ")} && ls -l --file-type -h -a .`, directory, responseCallback, retryCount);
+}
+
+function createNewFolder(foldername, directory, responseCallback, retryCount=2){
+    runCommand(`mkdir ${foldername.replace(/\s/, "\\ ")} && ls -l --file-type -h -a .`, directory, responseCallback, retryCount);
+}
+
 module.exports = {
     connectToServer,
     runCommand,
-    listFiles
+    listFiles,
+    createNewFile,
+    createNewFolder
 }

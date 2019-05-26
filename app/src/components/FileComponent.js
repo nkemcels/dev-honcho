@@ -35,10 +35,16 @@ export default class FileComponent extends React.Component{
         })
     }
     handleMouseDoubleClicked= (event)=>{
+        event.stopPropagation();
         this.setState({
             loading:true
         })
         this.props.fileDoubleClicked(this.props.filename, this.props.filetype)
+    }
+
+    handleMouseClicked = (event)=>{
+        event.stopPropagation();
+        this.props.fileClicked(this.props.filename, this.props.filetype);
     }
 
     stripSeparator = (str)=>{
@@ -52,13 +58,14 @@ export default class FileComponent extends React.Component{
         return (
             <div style={{textAlign:'center', 
                           margin:'10px 5px',  
-                          backgroundColor:this.state.highlight?"#E8EAF6":null, 
-                          border: this.state.highlight?"1px solid #9FA8DA":null,
-                          borderRadius: this.state.highlight?1:0,
+                          backgroundColor:this.props.selected? "#C5CAE9":this.state.highlight?"#E8EAF6":null, 
+                          border: (this.state.highlight||this.props.selected)?"1px solid #9FA8DA":null,
+                          borderRadius: (this.state.highlight||this.props.selected)?1:0,
                           cursor:'pointer', width:120, height:80 }} 
                  onMouseEnter={this.handleMouseEntered} 
                  onMouseLeave={this.handleMouseExited}
-                 onDoubleClick={this.handleMouseDoubleClicked}>
+                 onDoubleClick={this.handleMouseDoubleClicked}
+                 onClick={this.handleMouseClicked}>
                  {this.props.filetype=='FILE'?
                     <div>
                         <div className="file-component">

@@ -1,5 +1,7 @@
 @import "../../node_modules/codemirror/lib/codemirror.css";
 @import "../../node_modules/codemirror/theme/abcdef.css";
+@import "../../node_modules/vex-js/dist/css/vex.css";
+@import "../../node_modules/vex-js/dist/css/vex-theme-os.css";
 
 /***********************
  *  APP HEADER STYLES  *
@@ -111,22 +113,52 @@
     bottom: 0;
 }
 .fs-container>.fs-header{
-    min-height: 3em;
+    min-height: 2.5em;
     border-bottom: 1px solid rgba(0,0,0,0.15); 
     box-shadow: 0px 1px 1px rgba(0,0,0,0.1);
 }
 .fs-header-menu{
     display: flex;
     flex-direction: row;
+    align-content: center;
+    align-items: center;
 }
 .fs-header-menu-item{
     display: inline-block;
+    height: calc(100% - 10px);
     text-align: center;
-    padding:5;
-    margin-left: 3
+    padding-left: 3px;
+    padding-right: 3px;
+    margin-left: 3px;
+}
+.fs-header-menu-item.fs-header-menu-item-hoverable:hover{
+    background-color: #E8EAF6;
+    border: 1px solid #9FA8DA;
+}
+.fs-header-menu-item.fs-header-menu-item-disabled>.glyphicon{
+    color: #aaa !important
+}
+.fs-header-menu-item.operation-message{
+    background-color: #EFEBE9;
+    border-color: 1px solid #A1887F;
+    padding: 3px; 
+    padding-left: 10px;
+    padding-right: 10px;
 }
 .fs-header-menu-item>.glyphicon{
-    font-size:24;
+    font-size:20px;
+    text-shadow: 0 0.15px 0 #ccc,
+               0 0.15px 0 #c9c9c9,
+               0 0.15px 0 #bbb,
+               0 0.5px 0 #b9b9b9,
+               0 0.25px 0 #aaa,
+               0 0.5px 0.15px rgba(0,0,0,.075),
+               0 0 0.75px rgba(0,0,0,.075),
+               0 0.10px 0.25px rgba(0,0,0,.15),
+               0 0.15px 0.25px rgba(0,0,0,.1),
+               0 0.25px 0.5px rgba(0,0,0,.125),
+               0 0.5px 0.5px rgba(0,0,0,.1),
+               0 1.25px 1.25px rgba(0,0,0,.10);
 }
 .fs-container>.fs-content{
     flex-grow: 1;
@@ -160,7 +192,11 @@
 .fs-display>.fs-display-content{
     display: flex;
     flex-wrap: wrap;
+    flex-direction: row;
+    align-items: flex-start;
+    align-content: flex-start;
     max-height: calc(100% - 15px);
+    height: calc(100% - 15px);
     overflow-y: auto;
     padding-bottom: 75px;
     background-color: #F5F5F5

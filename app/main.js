@@ -306,9 +306,9 @@ function parseListedFiles(stdout){
     let results = stdout.split("\n");
     let processed = []
     for (let line of results){
-        let fileParts = line.split(" ");
+        let fileParts = line.split(/\s+/);
         if(fileParts.length>=9){
-            const name = fileParts[fileParts.length-1]
+            const name = fileParts.slice(8, fileParts.length).join(" ").trim();
             processed = [...processed, {
                 name,
                 type: name.endsWith("/")||name.endsWith("\\")?"DIRECTORY":"FILE",
@@ -320,7 +320,24 @@ function parseListedFiles(stdout){
         }
     }
 
+    console.log("proccessed: ", processed)
+
     return processed;
+}
+
+function handleDefaultResponse(window, statusOk, stdout, stderr){
+    console.log("error: ", stderr)
+    if(statusOk){
+        if(stderr){
+            console.log("rather sending error")
+            window.webContents.send("server-operation-response", getResponse({"error":stderr}));
+        }else{
+            let parsedResult = parseListedFiles(stdout);
+            window.webContents.send("server-operation-response", getResponse(parsedResult));
+        }
+    }else{
+        window.webContents.send("server-operation-response", getResponse(null, stdout));
+    }
 }
 
 function performServerOperation(event, args){
@@ -329,17 +346,19 @@ function performServerOperation(event, args){
         switch(args.type){
             case constants.SERVER_OP_LIST_DIR:
                 ssh.listFiles(args.payload, function(statusOk, stdout, stderr){
-                    if(statusOk){
-                        if(stderr){
-                            window.webContents.send("server-operation-response", getResponse({"error":stderr}));
-                        }else{
-                            let parsedResult = parseListedFiles(stdout);
-                            window.webContents.send("server-operation-response", getResponse(parsedResult));
-                        }
-                    }else{
-                        window.webContents.send("server-operation-response", getResponse(null, stdout));
-                    }
+                    handleDefaultResponse(window, statusOk, stdout, stderr);
                 });
+            break
+            case constants.SERVER_OP_CREATE_NEW_FILE:
+                ssh.createNewFile(args.payload.name, args.payload.currentDirectory, function(statusOk, stdout, stderr){
+                    handleDefaultResponse(window, statusOk, stdout, stderr);
+                });
+            break;
+            case constants.SERVER_OP_CREATE_NEW_FOLDER:
+                ssh.createNewFolder(args.payload.name, args.payload.currentDirectory, function(statusOk, stdout, stderr){
+                    handleDefaultResponse(window, statusOk, stdout, stderr);
+                });
+            break;    
         }
     }
 }
