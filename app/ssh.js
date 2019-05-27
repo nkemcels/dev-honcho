@@ -59,10 +59,21 @@ function createNewFolder(foldername, directory, responseCallback, retryCount=2){
     runCommand(`mkdir ${foldername.replace(/\s/, "\\ ")} && ls -l --file-type -h -a .`, directory, responseCallback, retryCount);
 }
 
+function deleteItems(items, directory, responseCallback, retryCount=2){
+    let deleteFilesCmd = items && items instanceof Array && `rm -r ${items.map(elt=>elt.replace(/\s/, "\\ ")).join(" ")} && ls -l --file-type -h -a .`;
+    runCommand(deleteFilesCmd, directory, responseCallback, retryCount);
+}
+
+function renameFileOrFolder(oldName, newName, directory, responseCallback, retryCount=2){
+    runCommand(`mv ${oldName.replace(/\s/, "\\ ")} ${newName.replace(/\s/, "\\ ")} && ls -l --file-type -h -a .`, directory, responseCallback, retryCount);
+}
+
 module.exports = {
     connectToServer,
     runCommand,
     listFiles,
     createNewFile,
-    createNewFolder
+    createNewFolder,
+    deleteItems,
+    renameFileOrFolder
 }

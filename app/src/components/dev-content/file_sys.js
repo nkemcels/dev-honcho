@@ -110,9 +110,9 @@ export default class FileSystemView extends React.Component{
 
     handleFileClicked = (filename, filetype)=>{
         this.setState({
-            selectedFiles: this.state.selectedFiles.includes(filename)?
-                            this.state.selectedFiles.filter(elt=>elt!==filename) :
-                            [...this.state.selectedFiles, filename]
+            selectedFiles: this.state.selectedFiles.findIndex(elt=>elt.filename==filename)>=0?
+                            this.state.selectedFiles.filter(elt=>elt.filename!==filename) :
+                            [...this.state.selectedFiles, {filename, filetype}]
         });
     }
 
@@ -153,7 +153,7 @@ export default class FileSystemView extends React.Component{
             message: `Enter Name of ${type==constants.SERVER_OP_CREATE_NEW_FILE?"File":"Directory"}`,
             placeholder: `${type==constants.SERVER_OP_CREATE_NEW_FILE?"File":"Directory"} Name`,
             callback: (name)=> {
-                if(name && this.state.fileList.findIndex(elt=>elt.name==name)>=0){
+                if(name && this.state.fileList.findIndex(elt=>elt.name.trim()==name.trim())>=0){
                     this.displayAlert(`File '${name}' already exists!`)
                 }
                 else if(name){
@@ -165,9 +165,7 @@ export default class FileSystemView extends React.Component{
                         this.setState({operationMessage:null})
                         if(response.result==="OK"){
                             if(response.payload instanceof Array){
-                                this.setState({
-                                    fileList:response.payload
-                                });
+                                this.handleSetFileList(this.state.currentDirectory, this.state.currentFileName, response.payload, true)
                             }else{
                                 this.displayAlert(response.payload.error)
                             }
@@ -204,12 +202,66 @@ export default class FileSystemView extends React.Component{
         
     }
 
+    handleRenameSelected = ()=>{
+        let options = {currentDirectory:this.state.currentDirectory};
+        if(this.state.selectedFiles.length!=1) return;
+        const oldName = this.state.selectedFiles[0].filename;
+        vex.dialog.prompt({
+            message: `Rename ${oldName} to...`,
+            callback: (newName)=>{
+                if(newName && this.state.fileList.findIndex(elt=>elt.name.trim()==newName.trim())>=0){
+                    this.displayAlert(`Filename '${newName}' already exists!`)
+                }
+                else if(newName){
+                    this.setState({  operationMessage: `Renaming ${oldName} to ${newName}...` });
+                    options = {...options, oldName, newName}
+                    this.props.serverOperation({type:constants.SERVER_OP_RENAME, payload:options}, (response)=>{
+                        this.setState({operationMessage:null})
+                        if(response.result==="OK"){
+                            if(response.payload instanceof Array){
+                                this.handleSetFileList(this.state.currentDirectory, this.state.currentFileName, response.payload, true)
+                            }else{
+                                this.displayAlert(response.payload.error)
+                            }
+                        }else{
+                            this.displayAlert(response.error)
+                        }
+                    });
+                }
+            }
+        })
+    }
+
     selectAllItemsInCurrentDirectory = ()=>{
 
     }
 
     handleDeleteSelectedFiles = ()=>{
+        let options = {currentDirectory:this.state.currentDirectory};
+        if(this.state.selectedFiles.length<=0) return;
+        vex.dialog.confirm({
+            message: `Are you sure you want to delete these (${this.state.selectedFiles.length}) items?`,
+            callback: (ok)=>{
+                if(ok){
+                    let items = [];
+                    for(let item of this.state.selectedFiles){
+                        items.push(item.filename);
+                    }
+                    this.setState({operationMessage:`Deleting (${this.state.selectedFiles.length}) items`})
+                    this.props.serverOperation({type:constants.SERVER_OP_DELETE, payload:{ items, currentDirectory:this.state.currentDirectory } }, (response)=>{
+                        this.setState({operationMessage:null})
+                        if(response.result==="OK"){
+                            if(response.payload instanceof Array){
+                                this.handleSetFileList(this.state.currentDirectory, this.state.currentFileName, response.payload, true)
+                            }
+                            else{ this.displayAlert(response.payload.error)  }
+                        }
+                        else{ this.displayAlert(response.error) }
+                    });
 
+                }
+            }
+        })
     }
 
     handleLaunchSelectedFile = ()=>{
@@ -251,6 +303,11 @@ export default class FileSystemView extends React.Component{
                                 <div className="fs-header-menu-item"
                                      onClick={this.handlePasteSelected}>
                                     <span className='glyphicon glyphicon-paste' style={{color:"#0288D1"}} />
+                                </div>
+                                <div className={`fs-header-menu-item ${this.state.selectedFiles.length==1?"fs-header-menu-item-hoverable":"fs-header-menu-item-disabled"}`} 
+                                     style={{marginLeft:40}}
+                                     onClick={this.handleRenameSelected}>
+                                    <span className='glyphicon glyphicon-pencil' style={{color:"#c62828"}} />
                                 </div>
                                 <div className="fs-header-menu-item fs-header-menu-item-hoverable" 
                                      style={{marginLeft:40}}
@@ -341,7 +398,7 @@ export default class FileSystemView extends React.Component{
                                                     filename = {elt.name}
                                                     filetype = {elt.type}
                                                     ext = {elt.extension}
-                                                    selected = {this.state.selectedFiles.includes(elt.name)}
+                                                    selected = {this.state.selectedFiles.findIndex(item=>item.filename===elt.name)>=0}
                                                     fileClicked = {this.handleFileClicked}
                                                     fileDoubleClicked={this.handleFileDoubleClicked} />
                                             ))

@@ -310,8 +310,8 @@ function parseListedFiles(stdout){
         if(fileParts.length>=9){
             const name = fileParts.slice(8, fileParts.length).join(" ").trim();
             processed = [...processed, {
-                name,
-                type: name.endsWith("/")||name.endsWith("\\")?"DIRECTORY":"FILE",
+                name:name.endsWith(path.sep)?name.substring(0, name.lastIndexOf(path.sep)):name,
+                type: name.endsWith(path.sep)?"DIRECTORY":"FILE",
                 extension: path.extname(name),
                 size: fileParts[4],
                 metadata: fileParts[0]+" "+fileParts[1]+" "+fileParts[2]+" "+fileParts[3],
@@ -356,6 +356,16 @@ function performServerOperation(event, args){
             break;
             case constants.SERVER_OP_CREATE_NEW_FOLDER:
                 ssh.createNewFolder(args.payload.name, args.payload.currentDirectory, function(statusOk, stdout, stderr){
+                    handleDefaultResponse(window, statusOk, stdout, stderr);
+                });
+            break;
+            case constants.SERVER_OP_DELETE:
+                ssh.deleteItems(args.payload.items,  args.payload.currentDirectory, function(statusOk, stdout, stderr){
+                    handleDefaultResponse(window, statusOk, stdout, stderr);
+                });
+            break;
+            case constants.SERVER_OP_RENAME:
+                ssh.renameFileOrFolder(args.payload.oldName, args.payload.newName, args.payload.currentDirectory, function(statusOk, stdout, stderr){
                     handleDefaultResponse(window, statusOk, stdout, stderr);
                 });
             break;    
