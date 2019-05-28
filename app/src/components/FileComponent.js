@@ -57,7 +57,7 @@ export default class FileComponent extends React.Component{
     render(){        
         return (
             <div style={{textAlign:'center', 
-                          margin:'10px 5px',  
+                          margin:'10px 5px',
                           backgroundColor:this.props.selected? "#C5CAE9":this.state.highlight?"#E8EAF6":null, 
                           border: (this.state.highlight||this.props.selected)?"1px solid #9FA8DA":null,
                           borderRadius: (this.state.highlight||this.props.selected)?1:0,
@@ -67,7 +67,7 @@ export default class FileComponent extends React.Component{
                  onDoubleClick={this.handleMouseDoubleClicked}
                  onClick={this.handleMouseClicked}>
                  {this.props.filetype=='FILE'?
-                    <div>
+                    <div style={{opacity: this.props.cutActivated? 0.6:1}}>
                         <div className="file-component">
                             <span className='glyphicon glyphicon-file' style={{fontSize:45, margin:5, position:'relative', color:"#FFA726"}}/>
                             <span style={{position:'absolute', top:35, left:0, right:0, bottom:0, color:'white', fontSize:10}}><b>{this.props.ext.toUpperCase()}</b></span>
@@ -75,12 +75,13 @@ export default class FileComponent extends React.Component{
                         <div style={{wordWrap:'break-word', textOverflow:'ellipsis', overflow: 'hidden', width:'100%', whiteSpace: 'nowrap', textAlign:'center'}}>{this.props.filename}</div>
                     </div>
                     :
-                    <div className="folder-component">
-                        <span className={`glyphicon glyphicon-folder-${this.state.loading?"open":"close"}`} style={{fontSize:45, margin:5, color:this.state.loading?"#64B5F6":"#01579B"}}>
-                            
-                        </span><br />
-                        <div style={{wordWrap:'break-word', textOverflow:'ellipsis', overflow: 'hidden', width:'100%', whiteSpace: 'nowrap', textAlign:'center'}}>
-                            {this.state.loading?<b>Opening...</b>:this.stripSeparator(this.props.filename)}
+                    <div style={{opacity: this.props.cutActivated? 0.6:1}}>
+                        <div className="folder-component">
+                            <span className={`glyphicon glyphicon-folder-${this.state.loading?"open":"close"}`} style={{fontSize:45, margin:5, color:this.state.loading?"#64B5F6":"#01579B"}}>
+                            </span><br />
+                            <div style={{wordWrap:'break-word', textOverflow:'ellipsis', overflow: 'hidden', width:'100%', whiteSpace: 'nowrap', textAlign:'center'}}>
+                                {this.state.loading?<b>Opening...</b>:this.stripSeparator(this.props.filename)}
+                            </div>
                         </div>
                     </div>
                  }

@@ -368,7 +368,18 @@ function performServerOperation(event, args){
                 ssh.renameFileOrFolder(args.payload.oldName, args.payload.newName, args.payload.currentDirectory, function(statusOk, stdout, stderr){
                     handleDefaultResponse(window, statusOk, stdout, stderr);
                 });
-            break;    
+            break;
+            case constants.SERVER_OP_COPY_PASTE:
+                console.log("called ", args)
+                ssh.copyPasteFilesOrFolders(args.payload.selectedFiles, args.payload.destination, function(statusOk, stdout, stderr){
+                    handleDefaultResponse(window, statusOk, stdout, stderr);
+                });
+            break;
+            case constants.SERVER_OP_CUT_PASTE:
+                ssh.cutPasteFilesOrFolders(args.payload.selectedFiles, args.payload.destination, function(statusOk, stdout, stderr){
+                    handleDefaultResponse(window, statusOk, stdout, stderr);
+                });
+            break;      
         }
     }
 }
