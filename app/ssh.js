@@ -60,7 +60,7 @@ function createNewFolder(foldername, directory, responseCallback, retryCount=2){
 }
 
 function deleteItems(items, directory, responseCallback, retryCount=2){
-    let deleteFilesCmd = items && items instanceof Array && `rm -r ${items.map(elt=>elt.replace(/\s/, "\\ ")).join(" ")} & ls -l --file-type -h -a .`;
+    let deleteFilesCmd = items && items instanceof Array && `rm -r ${items.map(elt=>elt.replace(/\s/, "\\ ")).join(" ")} ; ls -l --file-type -h -a .`;
     runCommand(deleteFilesCmd, directory, responseCallback, retryCount);
 }
 
@@ -69,14 +69,15 @@ function renameFileOrFolder(oldName, newName, directory, responseCallback, retry
 }
 
 function copyPasteFilesOrFolders(files, directory, responseCallback, retryCount=2){
-    let command = files instanceof Array && files.reduce((acc, value)=>`cp -r ${value} . & ${acc}`, "")
+    let command = files instanceof Array && files.reduce((acc, value)=>`cp -r ${value} . ; ${acc}`, "")
     command = `${command} ls -l --file-type -h -a .`
     runCommand(command, directory, responseCallback, retryCount);
 }
 
 function cutPasteFilesOrFolders(files, directory, responseCallback, retryCount=2){
-    let command = files instanceof Array && files.reduce((acc, value)=>`mv -r ${value} . & ${acc}`, "")
+    let command = files instanceof Array && files.reduce((acc, value)=>`mv ${value} . ; ${acc}`, "")
     command = `${command} ls -l --file-type -h -a .`
+    console.log("command to execute: ", command)
     runCommand(command, directory, responseCallback, retryCount);
 }
 

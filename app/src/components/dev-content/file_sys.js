@@ -100,12 +100,13 @@ export default class FileSystemView extends React.Component{
         }else{
             this.props.serverOperation({type:constants.SERVER_OP_LIST_DIR, payload:filepath}, (response)=>{
                 if(response.result == "OK"){
-                    if(response.payload instanceof Array){
-                        this.handleSetFileList(filepath, filename, response.payload, saveBreadcrumb)
+                    if(response.payload && response.payload.data instanceof Array){
+                        this.handleSetFileList(filepath, filename, response.payload.data, saveBreadcrumb)
                         this.setState({
                             selectedFiles:[]
                         });
-                    }else{
+                    }
+                    if(response.payload&&response.payload.error){
                         this.displayAlert(response.payload.error)
                     }
                 }else{
@@ -197,6 +198,7 @@ export default class FileSystemView extends React.Component{
             activatedPath: this.state.currentDirectory
         }, ()=>{
             this.setState({operationMessage:`(${this.state.activatedFiles.length}) items cut`})
+            console.log("selected: ", this.state.selectedFiles)
         });
     }
 
@@ -214,9 +216,10 @@ export default class FileSystemView extends React.Component{
     handleDefaultResponse = (response, saveBreadcrumb=true)=>{
         this.setState({operationMessage:null})
         if(response.result==="OK"){
-            if(response.payload instanceof Array){
-                this.handleSetFileList(this.state.currentDirectory, this.state.currentFileName, response.payload, saveBreadcrumb)
-            }else{
+            if(response.payload && response.payload.data instanceof Array){
+                this.handleSetFileList(this.state.currentDirectory, this.state.currentFileName, response.payload.data, saveBreadcrumb)
+            }
+            if(response.payload && response.payload.error){
                 this.displayAlert(response.payload.error)
             }
         }else{
@@ -246,6 +249,11 @@ export default class FileSystemView extends React.Component{
             this.setState({operationMessage:null})
             this.handleDefaultResponse(response)
         });
+        if(this.state.cutActivated){
+            this.setState({ activatedFiles:[] })
+            delete this.cachedList[this.state.activatedPath];
+        }
+        
     }
 
     handleRenameSelected = ()=>{
@@ -424,19 +432,19 @@ export default class FileSystemView extends React.Component{
                                     </div>
                                     <div className="fs-display-content" onClick={()=>this.setState({selectedFiles:[]})}>
                                          {
-                                            this.state.fileList.map((elt, indx)=>(
-                                                <FileComponent 
+                                            this.state.fileList.map((elt, indx)=>{
+                                                return <FileComponent 
                                                     key = {indx}
                                                     filename = {elt.name}
                                                     filetype = {elt.type}
                                                     ext = {elt.extension}
-                                                    selected = {this.state.selectedFiles.findIndex(item=>item.filename===elt.name)>=0}
-                                                    activated = {this.state.activatedFiles.findIndex(item=>item.filename===elt.name)>=0}
+                                                    selected = {(this.state.selectedFiles.findIndex(item=>item.filename===elt.name)>=0)}
+                                                    activated = {(this.state.activatedFiles.findIndex(item=>item.filename===elt.name)>=0)}
                                                     copyActivated = {this.state.copyActivated}
                                                     cutActivated = {this.state.cutActivated}
                                                     fileClicked = {this.handleFileClicked}
                                                     fileDoubleClicked={this.handleFileDoubleClicked} />
-                                            ))
+                                            })
                                          }
                                          {this.state.fileList.length==0&&this.state.currentDirectory&&
                                             <div className="centered-content match-parent">

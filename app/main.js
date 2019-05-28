@@ -303,6 +303,7 @@ function connectToServer(event, args){
 }
 
 function parseListedFiles(stdout){
+    if(!stdout) return null;
     let results = stdout.split("\n");
     let processed = []
     for (let line of results){
@@ -320,23 +321,16 @@ function parseListedFiles(stdout){
         }
     }
 
-    console.log("proccessed: ", processed)
-
-    return processed;
+    return processed.length==0?null:processed;
 }
 
 function handleDefaultResponse(window, statusOk, stdout, stderr){
     console.log("error: ", stderr)
     if(statusOk){
-        if(stderr){
-            console.log("rather sending error")
-            window.webContents.send("server-operation-response", getResponse({"error":stderr}));
-        }else{
-            let parsedResult = parseListedFiles(stdout);
-            window.webContents.send("server-operation-response", getResponse(parsedResult));
-        }
+        let parsedResult = parseListedFiles(stdout);
+        window.webContents.send("server-operation-response", getResponse({error:stderr, data:parsedResult}));
     }else{
-        window.webContents.send("server-operation-response", getResponse(null, stdout));
+        window.webContents.send("server-operation-response", getResponse(null, stdout||stderr));
     }
 }
 
@@ -370,7 +364,6 @@ function performServerOperation(event, args){
                 });
             break;
             case constants.SERVER_OP_COPY_PASTE:
-                console.log("called ", args)
                 ssh.copyPasteFilesOrFolders(args.payload.selectedFiles, args.payload.destination, function(statusOk, stdout, stderr){
                     handleDefaultResponse(window, statusOk, stdout, stderr);
                 });
