@@ -438,10 +438,15 @@ export default class FileSystemView extends React.Component{
                                                     fileDoubleClicked={this.handleFileDoubleClicked} />
                                             ))
                                          }
-                                         {this.state.fileList.length==0&&
+                                         {this.state.fileList.length==0&&this.state.currentDirectory&&
                                             <div className="centered-content match-parent">
                                                 <h4>Folder is Empty</h4>
                                             </div>
+                                         }
+                                         {this.state.fileList.length==0&&!this.state.currentDirectory&&
+                                            <Dimmer active>
+                                                <Loader size='large' indeterminate>Listing Files in Home Directory...</Loader>
+                                            </Dimmer> 
                                          }
                                     </div>
                                 </div>
