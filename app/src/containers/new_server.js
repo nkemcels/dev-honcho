@@ -1,7 +1,7 @@
 import React from "react";
-import {Menu, Card, Dropdown, Grid, Segment, Form, Button, Message} from "semantic-ui-react";
+import {Grid, Segment, Form, Button, Message} from "semantic-ui-react";
 import {Header, Footer, Pane} from "../components";
-import {ipcRenderer, ipcMain} from "electron";
+import {ipcRenderer} from "electron";
 import "../styles.css";
 
 export default class NewServerPane extends React.Component{

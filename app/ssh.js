@@ -1,5 +1,10 @@
 const NodeSSH = require('node-ssh')
-const ssh = new NodeSSH()
+const temp = require("tmp");
+const fs = require("fs");
+const tty = require("tty")
+const childProcess = require("child_process");
+temp.setGracefulCleanup();
+const ssh = new NodeSSH();
 let connectionArgs = {/*
     host: '52.25.188.203',
     username: 'ubuntu',
@@ -77,8 +82,47 @@ function copyPasteFilesOrFolders(files, directory, responseCallback, retryCount=
 function cutPasteFilesOrFolders(files, directory, responseCallback, retryCount=2){
     let command = files instanceof Array && files.reduce((acc, value)=>`mv ${value} . ; ${acc}`, "")
     command = `${command} ls -l --file-type -h -a .`
-    console.log("command to execute: ", command)
     runCommand(command, directory, responseCallback, retryCount);
+}
+
+const tempFiles = {}
+function getOrCreateTempFile(key, contentPath, options){
+    if(!tempFiles[key]){
+        tempFiles[key] = temp.fileSync(options).name;
+        if(contentPath){
+            fs.copyFileSync(contentPath, tempFiles[key]);
+            if(options.mode){
+                childProcess.spawnSync(`chmod ${options.mode} ${tempFiles[key]}`, {shell:true, });
+            }
+        }
+    }
+    return tempFiles[key];
+}
+
+function downloadFiles(remoteFiles, localTarget, responseCallback, id, retryCount=2){
+    const pemPath = connectionArgs.privateKey;
+    if(pemPath){
+        const mappedPemPath = getOrCreateTempFile(pemPath, pemPath, {mode:400});
+        const allFiles = remoteFiles.reduce((acc, elt)=>acc+" "+elt.path, "").trim()
+        const command = `scp -o StrictHostKeyChecking=no -i ${mappedPemPath} -r ${connectionArgs.username}@${connectionArgs.host}:"${allFiles}" ${localTarget}`;
+        const Proccess = childProcess.spawn(command, {shell:true});
+        const callBackIsValid = responseCallback && responseCallback instanceof Function;
+        Proccess.stdout.on("data", function(data){
+            if(callBackIsValid){
+                responseCallback({stdoutChunk: data.toString(), id});
+            }
+        });
+        Proccess.stderr.on("data", function(data){
+            if(callBackIsValid){
+                responseCallback({stderrChunk: data.toString(), done:false, id});
+            }
+        });
+        Proccess.on("close", function(code){
+            if(callBackIsValid){
+                responseCallback({done:true, success:code===0, id})
+            }
+        });
+    }
 }
 
 module.exports = {
@@ -90,5 +134,6 @@ module.exports = {
     deleteItems,
     renameFileOrFolder,
     copyPasteFilesOrFolders,
-    cutPasteFilesOrFolders
+    cutPasteFilesOrFolders,
+    downloadFiles
 }

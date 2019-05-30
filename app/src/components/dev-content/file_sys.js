@@ -3,11 +3,11 @@ import {Dimmer, Loader, Image} from "semantic-ui-react";
 import placeHolderImage from "../../../images/short-paragraph.png";
 import FileComponent from "../FileComponent";
 import * as constants from "../../../constants";
+import {remote as electron, ipcRenderer as ipc} from "electron";
 import path from "path";
 
 const vex = require("vex-js")
 vex.registerPlugin(require('vex-dialog'))
-vex.defaultOptions.className = 'vex-theme-os'
 vex.defaultOptions.className = 'vex-theme-os'
 
 export default class FileSystemView extends React.Component{
@@ -26,9 +26,11 @@ export default class FileSystemView extends React.Component{
             cutActivated:false,
             copyActivated:false,
             activatedFiles:[],
-            activatedPath:null
+            activatedPath:null,
+            sudoPwd:null
         }
         this.cachedList = {}
+        ipc.on("stray-data", this.handleStrayData)
     }
     componentDidMount(){
         if(!this.props.connected){
@@ -45,14 +47,46 @@ export default class FileSystemView extends React.Component{
                         this.listDirectoryFor("~", "Home")
                     });
                 }
-            })
+            });
+        }
+    }
+
+    componentWillUnmount(){
+        ipc.removeAllListeners("stray-data")
+    }
+
+    handleStrayData = (event, data)=>{
+        console.log("strayData", data)
+        const updateThisDownloadIdText = (status)=>{
+            const temp = [...this.state.downloadState]
+            temp[data.id] = status;
+            this.setState({downloadState:temp}, ()=>{
+                setTimeout(() => {
+                    temp[data.id] = null;
+                    if(!this.state.downloadState.reduce((acc, val)=>Boolean(acc&&val), true)){
+                        this.setState({downloadState:temp})
+                    }else{
+                        this.setState({downloadState:null})
+                    }
+                }, 5000);
+            });
+        }
+        if(data.done){
+            if(data.success){
+                updateThisDownloadIdText("[DONE]")
+            }else{
+                updateThisDownloadIdText("[FAILED]")
+            }
+        }else if(data.stderrChunk){
+            updateThisDownloadIdText("[FAILED]")
+            this.displayAlert(`ERROR: ${data.stderrChunk}`);
         }
     }
 
     handleBackNav = ()=>{
         if(this.backPathsCount - 2>0){
             const fpath = this.state.breadcrumbPaths[--this.backPathsCount-1];
-            const fpathArr = fpath.split(path.sep);
+            const fpathArr = fpath.split("/");
             if(fpath){
                 this.listDirectoryFor(fpath, fpathArr[fpathArr.length-1], false)
             }
@@ -62,7 +96,7 @@ export default class FileSystemView extends React.Component{
     handleFowardNav = ()=>{
         if(this.backPathsCount<this.state.breadcrumbPaths.length){
             const fpath = this.state.breadcrumbPaths[this.backPathsCount++];
-            const fpathArr = fpath.split(path.sep);
+            const fpathArr = fpath.split("/");
             if(fpath){
                 this.listDirectoryFor(fpath, fpathArr[fpathArr.length-1], false)
             }
@@ -85,7 +119,6 @@ export default class FileSystemView extends React.Component{
             });
         }
         this.cachedList[filepath] = fileList
-        console.log(this.cachedList)
     }
 
     displayAlert = (alert)=>{
@@ -113,8 +146,7 @@ export default class FileSystemView extends React.Component{
                     this.displayAlert(response.error)
                 }
             })
-        }
-        
+        }        
     }
 
     handleFileClicked = (filename, filetype)=>{
@@ -127,7 +159,7 @@ export default class FileSystemView extends React.Component{
 
     handleBreadCrumbNavigate = (elt, indx)=>{
         const parts = this.state.breadcrumbPaths[this.state.breadcrumbPaths.length-1];
-        const fpath = parts.split(path.sep).slice(0, indx+1).join(path.sep);
+        const fpath = parts.split("/").slice(0, indx+1).join("/");
         const index = this.state.breadcrumbPaths.indexOf(fpath);
         this.backPathsCount = index+1;
         this.listDirectoryFor(fpath, elt, false);
@@ -150,8 +182,8 @@ export default class FileSystemView extends React.Component{
     }
 
     stripSeparator = (str)=>{
-        if (str.endsWith(path.sep)){
-            return str.substring(0, str.lastIndexOf(path.sep));
+        if (str.endsWith("/")){
+            return str.substring(0, str.lastIndexOf("/"));
         }
         return str;
     }
@@ -175,11 +207,29 @@ export default class FileSystemView extends React.Component{
                     });
                 }
             }
-        })
+        });
     }
 
     handleDownloadSelected = ()=>{
-
+        if(this.state.selectedFiles.length<=0) return;    
+        const { dialog } = electron
+        const selected = dialog.showOpenDialog({ properties: ['openDirectory'], title:"Select Destination Location" });
+        if(selected && selected.length>0){
+            const destination = selected[0];
+            const options = {files:this.state.selectedFiles.map(elt=>({path: path.join(this.state.currentDirectory, elt.filename), type:elt.filetype})),
+                             destination};
+            if(!this.downloadId){
+                this.downloadId = 0;
+            }
+            this.downloadId++; 
+            const statusText = `[Downloading (${this.state.selectedFiles.length}) items]`
+            const downloadState = this.state.downloadState? [...this.state.downloadState]:[]
+            downloadState[this.downloadId] = statusText;
+            this.setState({downloadState})                
+            this.props.serverOperation({type:constants.SERVER_OP_DOWNLOAD, payload:options, downloadId:this.downloadId}, (response)=>{
+                console.log(response)
+            });                 
+        }
     }
 
     handleUploadFiles = ()=>{
@@ -261,7 +311,7 @@ export default class FileSystemView extends React.Component{
         if(this.state.selectedFiles.length!=1) return;
         const oldName = this.state.selectedFiles[0].filename;
         vex.dialog.prompt({
-            message: `Rename ${oldName} to...`,
+            message: `Rename ${oldName} to?`,
             callback: (newName)=>{
                 if(newName && this.state.fileList.findIndex(elt=>elt.name.trim()==newName.trim())>=0){
                     this.displayAlert(`Filename '${newName}' already exists!`)
@@ -298,7 +348,6 @@ export default class FileSystemView extends React.Component{
                     this.props.serverOperation({type:constants.SERVER_OP_DELETE, payload:{ items, currentDirectory:this.state.currentDirectory } }, (response)=>{
                         this.handleDefaultResponse(response)
                     });
-
                 }
             }
         })
@@ -366,7 +415,7 @@ export default class FileSystemView extends React.Component{
                                 {this.state.operationMessage&&
                                     <div className="fs-header-menu-item operation-message"
                                         style={{marginLeft:40}}>
-                                        <b>{this.state.operationMessage}</b>
+                                        <b>{this.state.operationMessage?this.state.operationMessage:this.state.downloadState?this.state.downloadState.join(" "):null}</b>
                                     </div>
                                 }
                                 <div style={{flexGrow:1, textAlign:"right"}}>
@@ -422,7 +471,7 @@ export default class FileSystemView extends React.Component{
                                             <div style={{display:'inline-block', marginLeft:30}}>
                                                 <ol className="breadcrumb" style={{margin:0, maxHeight:"2em", padding:0, paddingLeft:5, paddingRight:5,backgroundColor:"#F0F0F0", marginTop:2}}>
                                                     {
-                                                        this.state.breadcrumbPaths.length>0 && this.state.breadcrumbPaths[this.state.breadcrumbPaths.length-1].split(path.sep).map((elt, i)=>(
+                                                        this.state.breadcrumbPaths.length>0 && this.state.breadcrumbPaths[this.state.breadcrumbPaths.length-1].split("/").map((elt, i)=>(
                                                             <li key={i} style={{padding:0, margin:0}}><a href="#" onClick={()=>this.handleBreadCrumbNavigate(elt, i)}>{ elt }</a></li>
                                                         ))
                                                     }

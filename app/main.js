@@ -311,8 +311,8 @@ function parseListedFiles(stdout){
         if(fileParts.length>=9){
             const name = fileParts.slice(8, fileParts.length).join(" ").trim();
             processed = [...processed, {
-                name:name.endsWith(path.sep)?name.substring(0, name.lastIndexOf(path.sep)):name,
-                type: name.endsWith(path.sep)?"DIRECTORY":"FILE",
+                name:name.endsWith("/")?name.substring(0, name.lastIndexOf("/")):name,
+                type: name.endsWith("/")?"DIRECTORY":"FILE",
                 extension: path.extname(name),
                 size: fileParts[4],
                 metadata: fileParts[0]+" "+fileParts[1]+" "+fileParts[2]+" "+fileParts[3],
@@ -372,7 +372,12 @@ function performServerOperation(event, args){
                 ssh.cutPasteFilesOrFolders(args.payload.selectedFiles, args.payload.destination, function(statusOk, stdout, stderr){
                     handleDefaultResponse(window, statusOk, stdout, stderr);
                 });
-            break;      
+            break;
+            case constants.SERVER_OP_DOWNLOAD:
+                ssh.downloadFiles(args.payload.files, args.payload.destination, ars.payload.downloadId, function(chunkData){
+                    window.webContents.send("stray-data", chunkData);
+                });
+                break;      
         }
     }
 }
@@ -399,4 +404,4 @@ ipc.on("open-modal-window-response", submitModalWindowResponse);
 ipc.on("delete-server-instance", deleteServerInstance);
 ipc.on("delete-server-instance-app", deleteServerInstanceApp);
 ipc.on("connect-to-server", connectToServer);
-ipc.on("server-operation", performServerOperation)
+ipc.on("server-operation", performServerOperation);
