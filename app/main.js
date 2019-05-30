@@ -374,7 +374,7 @@ function performServerOperation(event, args){
                 });
             break;
             case constants.SERVER_OP_DOWNLOAD:
-                ssh.downloadFiles(args.payload.files, args.payload.destination, ars.payload.downloadId, function(chunkData){
+                ssh.downloadFiles(args.payload.files, args.payload.destination, args.payload.downloadId, function(chunkData){
                     window.webContents.send("stray-data", chunkData);
                 });
                 break;      
