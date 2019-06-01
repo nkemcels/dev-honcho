@@ -95,8 +95,8 @@ export default class FileSystemView extends React.Component{
         });
     }
 
-    listDirectoryFor = (filepath, filename, saveBreadcrumb=true)=>{
-        if(this.cachedList[filepath]){
+    listDirectoryFor = (filepath, filename, saveBreadcrumb=true, useCache=true, callback)=>{
+        if(useCache&&this.cachedList[filepath]){
             this.handleSetFileList(filepath, filename, this.cachedList[filepath], saveBreadcrumb)
         }else{
             this.props.serverOperation({type:constants.SERVER_OP_LIST_DIR, payload:filepath}, (response)=>{
@@ -112,6 +112,9 @@ export default class FileSystemView extends React.Component{
                     }
                 }else{
                     this.displayAlert(response.error)
+                }
+                if(callback && callback instanceof Function){
+                    callback(response.result === "OK");
                 }
             })
         }        
@@ -228,9 +231,9 @@ export default class FileSystemView extends React.Component{
     }
 
     handleUploadFiles = (files, folders)=>{
-        const allFiles = []
-        if(files){   allFiles = [...allFiles, ...files]  }
-        if(folders){   allFiles = [...allFiles, ...folders]   }
+        let allFiles = []
+        if(files){   allFiles = [...allFiles, ...files.map(elt=>({path:elt, type:"FILE"}))]  }
+        if(folders){   allFiles = [...allFiles, ...folders.map(elt=>({path:elt, type:"DIRECTORY"}))]   }
         if(allFiles.length>0){
             const destination = this.state.currentDirectory;
             if(!this.uploadId){ this.uploadId = 0; }
@@ -238,14 +241,25 @@ export default class FileSystemView extends React.Component{
             
             const options = {files:allFiles,
                              destination,
-                             uploadId:this.uploadId};
+                             id:this.uploadId};
             
             const statusText = `[Uploading (${allFiles.length}) items]`;
             const downloadUploadState = this.state.downloadUploadState? [...this.state.downloadUploadState]:[];
-            downloadUploadState[this.downloadId] = statusText;
+            downloadUploadState[this.uploadId] = statusText;
             this.setState({downloadUploadState, selectedFiles:[]});                
-            this.props.serverOperation({type:constants.SERVER_OP_DOWNLOAD, payload:options}, (response)=>{
-                //console.log("unhandled response:", response);
+            this.props.serverOperation({type:constants.SERVER_OP_UPLOAD, payload:options}, (response)=>{
+                this.handleUploadDownloadComplete(response);
+                if(response.done && response.success){
+                    downloadUploadState[this.uploadId] = "Refreshing...";
+                    this.listDirectoryFor(this.state.currentDirectory, this.state.currentFileName, true, false, (success)=>{
+                        if(success){
+                            this.displayUploadDownloadStatus("Refreshed", this.uploadId)
+                        }else{
+                            this.displayUploadDownloadStatus("Refresh FAILED", this.uploadId)
+                        }
+                    })
+                }
+                
             });  
         }
     }

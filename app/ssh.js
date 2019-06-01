@@ -99,11 +99,11 @@ function getOrCreateTempFile(key, contentPath, options){
     return tempFiles[key];
 }
 
-function filesOperation(operation, remoteFiles, target, id, responseCallback,  retryCount=2){
+function filesOperation(operation, files, target, id, responseCallback,  retryCount=2){
     const pemPath = connectionArgs.privateKey;
     if(pemPath){
         const mappedPemPath = getOrCreateTempFile(pemPath, pemPath, {mode:400});
-        const allFiles = remoteFiles.reduce((acc, elt)=>acc+" "+elt.path.replace(/\s/, "\\ "), "").trim()
+        const allFiles = files.reduce((acc, elt)=>acc+" "+elt.path.replace(/\s/, "\\ "), "").trim()
         const downloadCommand = `scp -o StrictHostKeyChecking=no -i ${mappedPemPath} -r ${connectionArgs.username}@${connectionArgs.host}:"${allFiles}" ${target.replace(/\s/, "\\ ")}`;
         const uploadCommand = `scp -o StrictHostKeyChecking=no -i ${mappedPemPath.replace(/\s/, "\\ ")} -r ${allFiles} ${connectionArgs.username}@${connectionArgs.host}:${target.replace(/\s/, "\\ ")}`;
         const command = operation==="UPLOAD"?uploadCommand:downloadCommand;
