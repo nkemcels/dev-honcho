@@ -2,6 +2,7 @@ import React from "react";
 import {Dimmer, Loader, Image} from "semantic-ui-react";
 import placeHolderImage from "../../../images/short-paragraph.png";
 import FileComponent from "../FileComponent";
+import UploadSelection from "./upload_selection";
 import * as constants from "../../../constants";
 import {remote as electron, ipcRenderer as ipc} from "electron";
 import path from "path";
@@ -56,8 +57,7 @@ export default class FileSystemView extends React.Component{
     }
 
     handleStrayData = (event, data)=>{
-        console.log("strayData", data)
-        const updateThisDownloadIdText = (status)=>{
+         const updateThisDownloadIdText = (status)=>{
             const temp = [...this.state.downloadState]
             temp[data.id] = status;
             this.setState({downloadState:temp}, ()=>{
@@ -216,28 +216,34 @@ export default class FileSystemView extends React.Component{
         const selected = dialog.showOpenDialog({ properties: ['openDirectory'], title:"Select Destination Location" });
         if(selected && selected.length>0){
             const destination = selected[0];
-            const options = {files:this.state.selectedFiles.map(elt=>({path: path.join(this.state.currentDirectory, elt.filename), type:elt.filetype})),
-                             destination};
-            if(!this.downloadId){
-                this.downloadId = 0;
-            }
+            if(!this.downloadId){ this.downloadId = 0; }
             this.downloadId++; 
-            const statusText = `[Downloading (${this.state.selectedFiles.length}) items]`
-            const downloadState = this.state.downloadState? [...this.state.downloadState]:[]
+            
+            const options = {files:this.state.selectedFiles.map(elt=>({path: path.join(this.state.currentDirectory, elt.filename), type:elt.filetype})),
+                             destination,
+                             downloadId:this.downloadId};
+            
+            const statusText = `[Downloading (${this.state.selectedFiles.length}) items]`;
+            const downloadState = this.state.downloadState? [...this.state.downloadState]:[];
             downloadState[this.downloadId] = statusText;
-            this.setState({downloadState})                
-            this.props.serverOperation({type:constants.SERVER_OP_DOWNLOAD, payload:options, downloadId:this.downloadId}, (response)=>{
-                console.log(response)
+            this.setState({downloadState, selectedFiles:[]});                
+            this.props.serverOperation({type:constants.SERVER_OP_DOWNLOAD, payload:options}, (response)=>{
+                //console.log("unhandled response:", response);
             });                 
         }
     }
 
-    handleUploadFiles = ()=>{
-
-    }
-
-    handleUploadFolder =()=>{
-
+    handleUploadFiles = (files, folders)=>{
+        const allFiles = []
+        if(files){
+            allFiles = [...allFiles, ...files]
+        }
+        if(folders){
+            allFiles = [...allFiles, ...folders]
+        }
+        if(allFiles.length>0){
+            
+        }
     }
 
     handleCutSelected = ()=>{
@@ -248,7 +254,6 @@ export default class FileSystemView extends React.Component{
             activatedPath: this.state.currentDirectory
         }, ()=>{
             this.setState({operationMessage:`(${this.state.activatedFiles.length}) items cut`})
-            console.log("selected: ", this.state.selectedFiles)
         });
     }
 
@@ -303,7 +308,6 @@ export default class FileSystemView extends React.Component{
             this.setState({ activatedFiles:[] })
             delete this.cachedList[this.state.activatedPath];
         }
-        
     }
 
     handleRenameSelected = ()=>{
@@ -377,8 +381,11 @@ export default class FileSystemView extends React.Component{
                                      onClick={this.handleDownloadSelected}>
                                     <span className='glyphicon glyphicon-cloud-download' style={{color:"#00796B"}} />
                                 </div>
-                                <div className={`fs-header-menu-item ${this.state.selectedFiles.length>0?"fs-header-menu-item-hoverable":"fs-header-menu-item-disabled"}`}>
-                                    <span className='glyphicon glyphicon-cloud-upload' style={{color:"#0288D1"}} />
+                                
+                                <div className="fs-header-menu-item fs-header-menu-item-hoverable">
+                                         <UploadSelection
+                                            className="glyphicon glyphicon-cloud-upload" 
+                                            uploadSelectedFilesAndFolders={(files, folders)=>this.handleUploadFiles(files, folders)}/>
                                 </div>
                                 <div className={`fs-header-menu-item ${this.state.selectedFiles.length>0?"fs-header-menu-item-hoverable":"fs-header-menu-item-disabled"}`} 
                                      style={{marginLeft:40}}
@@ -412,10 +419,11 @@ export default class FileSystemView extends React.Component{
                                      onClick={this.handleLaunchSelectedFile}>
                                     <span className='glyphicon glyphicon-new-window' style={{color:"#00796B"}} />
                                 </div>
-                                {this.state.operationMessage&&
+                                {(this.state.operationMessage||this.state.downloadState)&&
                                     <div className="fs-header-menu-item operation-message"
                                         style={{marginLeft:40}}>
-                                        <b>{this.state.operationMessage?this.state.operationMessage:this.state.downloadState?this.state.downloadState.join(" "):null}</b>
+                                        <b style={this.state.downloadState?{marginLeft:5}:{}}>{this.state.operationMessage}</b>
+                                        <b>{this.state.downloadState?this.state.downloadState.join(" "):null}</b>
                                     </div>
                                 }
                                 <div style={{flexGrow:1, textAlign:"right"}}>

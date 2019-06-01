@@ -342,42 +342,47 @@ function performServerOperation(event, args){
                 ssh.listFiles(args.payload, function(statusOk, stdout, stderr){
                     handleDefaultResponse(window, statusOk, stdout, stderr);
                 });
-            break
+                break
             case constants.SERVER_OP_CREATE_NEW_FILE:
                 ssh.createNewFile(args.payload.name, args.payload.currentDirectory, function(statusOk, stdout, stderr){
                     handleDefaultResponse(window, statusOk, stdout, stderr);
                 });
-            break;
+                break;
             case constants.SERVER_OP_CREATE_NEW_FOLDER:
                 ssh.createNewFolder(args.payload.name, args.payload.currentDirectory, function(statusOk, stdout, stderr){
                     handleDefaultResponse(window, statusOk, stdout, stderr);
                 });
-            break;
+                break;
             case constants.SERVER_OP_DELETE:
                 ssh.deleteItems(args.payload.items,  args.payload.currentDirectory, function(statusOk, stdout, stderr){
                     handleDefaultResponse(window, statusOk, stdout, stderr);
                 });
-            break;
+                break;
             case constants.SERVER_OP_RENAME:
                 ssh.renameFileOrFolder(args.payload.oldName, args.payload.newName, args.payload.currentDirectory, function(statusOk, stdout, stderr){
                     handleDefaultResponse(window, statusOk, stdout, stderr);
                 });
-            break;
+                break;
             case constants.SERVER_OP_COPY_PASTE:
                 ssh.copyPasteFilesOrFolders(args.payload.selectedFiles, args.payload.destination, function(statusOk, stdout, stderr){
                     handleDefaultResponse(window, statusOk, stdout, stderr);
                 });
-            break;
+                break;
             case constants.SERVER_OP_CUT_PASTE:
                 ssh.cutPasteFilesOrFolders(args.payload.selectedFiles, args.payload.destination, function(statusOk, stdout, stderr){
                     handleDefaultResponse(window, statusOk, stdout, stderr);
                 });
-            break;
+                break;
             case constants.SERVER_OP_DOWNLOAD:
                 ssh.downloadFiles(args.payload.files, args.payload.destination, args.payload.downloadId, function(chunkData){
                     window.webContents.send("stray-data", chunkData);
                 });
-                break;      
+                break;
+            case constants.SERVER_OP_UPLOAD:
+                ssh.uploadFiles(args.payload.files, args.payload.destination, args.payload.downloadId, function(chunkData){
+                    window.webContents.send("stray-data", chunkData);
+                });
+                break;          
         }
     }
 }

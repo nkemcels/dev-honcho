@@ -99,12 +99,14 @@ function getOrCreateTempFile(key, contentPath, options){
     return tempFiles[key];
 }
 
-function downloadFiles(remoteFiles, localTarget, responseCallback, id, retryCount=2){
+function filesOperation(operation, remoteFiles, target, id, responseCallback,  retryCount=2){
     const pemPath = connectionArgs.privateKey;
     if(pemPath){
         const mappedPemPath = getOrCreateTempFile(pemPath, pemPath, {mode:400});
-        const allFiles = remoteFiles.reduce((acc, elt)=>acc+" "+elt.path, "").trim()
-        const command = `scp -o StrictHostKeyChecking=no -i ${mappedPemPath} -r ${connectionArgs.username}@${connectionArgs.host}:"${allFiles}" ${localTarget}`;
+        const allFiles = remoteFiles.reduce((acc, elt)=>acc+" "+elt.path.replace(/\s/, "\\ "), "").trim()
+        const downloadCommand = `scp -o StrictHostKeyChecking=no -i ${mappedPemPath} -r ${connectionArgs.username}@${connectionArgs.host}:"${allFiles}" ${target.replace(/\s/, "\\ ")}`;
+        const uploadCommand = `scp -o StrictHostKeyChecking=no -i ${mappedPemPath.replace(/\s/, "\\ ")} -r ${allFiles} ${connectionArgs.username}@${connectionArgs.host}:${target.replace(/\s/, "\\ ")}`;
+        const command = operation==="UPLOAD"?uploadCommand:downloadCommand;
         const Proccess = childProcess.spawn(command, {shell:true});
         const callBackIsValid = responseCallback && responseCallback instanceof Function;
         Proccess.stdout.on("data", function(data){
@@ -117,12 +119,25 @@ function downloadFiles(remoteFiles, localTarget, responseCallback, id, retryCoun
                 responseCallback({stderrChunk: data.toString(), done:false, id});
             }
         });
-        Proccess.on("close", function(code){
+        Proccess.on("end", function(){
+            if(callBackIsValid){
+                responseCallback({done:true, success:true, id})
+            }
+        })
+        Proccess.on("exit", function(code){
             if(callBackIsValid){
                 responseCallback({done:true, success:code===0, id})
             }
         });
     }
+}
+
+function downloadFiles(remoteFiles, localTarget, id, responseCallback,  retryCount=2){
+    filesOperation("DOWNLOAD", remoteFiles, localTarget, id, responseCallback,  retryCount)
+}
+
+function uploadFiles(localFiles, remoteTarget, id, responseCallback,  retryCount=2){
+    filesOperation("UPLOAD", localFiles, remoteTarget, id, responseCallback,  retryCount)
 }
 
 module.exports = {
@@ -135,5 +150,6 @@ module.exports = {
     renameFileOrFolder,
     copyPasteFilesOrFolders,
     cutPasteFilesOrFolders,
-    downloadFiles
+    downloadFiles,
+    uploadFiles
 }
