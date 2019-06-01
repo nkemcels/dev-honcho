@@ -221,8 +221,12 @@ export default class AppContainer extends React.Component{
     }
 
     handleServerOperation = (options, callback)=>{
-        ipc.send("server-operation", options);
-        ipc.once("server-operation-response", (event, data)=>{
+        options = options?options:{}
+        if(!this.operationId || this.operationId >= Number.MAX_SAFE_INTEGER) this.operationId = 0;
+        this.operationId++;
+
+        ipc.send(`server-operation`, {...options, operationId:this.operationId});
+        ipc.once(`server-operation${this.operationId}-response`, (event, data)=>{
             if(callback && callback instanceof Function){
                 callback(data);
             }

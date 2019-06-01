@@ -324,13 +324,12 @@ function parseListedFiles(stdout){
     return processed.length==0?null:processed;
 }
 
-function handleDefaultResponse(window, statusOk, stdout, stderr){
-    console.log("error: ", stderr)
+function handleDefaultResponse(window, operationId, statusOk, stdout, stderr){
     if(statusOk){
         let parsedResult = parseListedFiles(stdout);
-        window.webContents.send("server-operation-response", getResponse({error:stderr, data:parsedResult}));
+        window.webContents.send(`server-operation${operationId}-response`, getResponse({error:stderr, data:parsedResult}));
     }else{
-        window.webContents.send("server-operation-response", getResponse(null, stdout||stderr));
+        window.webContents.send(`server-operation${operationId}-response`, getResponse(null, stdout||stderr));
     }
 }
 
@@ -340,47 +339,47 @@ function performServerOperation(event, args){
         switch(args.type){
             case constants.SERVER_OP_LIST_DIR:
                 ssh.listFiles(args.payload, function(statusOk, stdout, stderr){
-                    handleDefaultResponse(window, statusOk, stdout, stderr);
+                    handleDefaultResponse(window, args.operationId, statusOk, stdout, stderr);
                 });
                 break
             case constants.SERVER_OP_CREATE_NEW_FILE:
                 ssh.createNewFile(args.payload.name, args.payload.currentDirectory, function(statusOk, stdout, stderr){
-                    handleDefaultResponse(window, statusOk, stdout, stderr);
+                    handleDefaultResponse(window, args.operationId, statusOk, stdout, stderr);
                 });
                 break;
             case constants.SERVER_OP_CREATE_NEW_FOLDER:
                 ssh.createNewFolder(args.payload.name, args.payload.currentDirectory, function(statusOk, stdout, stderr){
-                    handleDefaultResponse(window, statusOk, stdout, stderr);
+                    handleDefaultResponse(window, args.operationId, statusOk, stdout, stderr);
                 });
                 break;
             case constants.SERVER_OP_DELETE:
                 ssh.deleteItems(args.payload.items,  args.payload.currentDirectory, function(statusOk, stdout, stderr){
-                    handleDefaultResponse(window, statusOk, stdout, stderr);
+                    handleDefaultResponse(window, args.operationId, statusOk, stdout, stderr);
                 });
                 break;
             case constants.SERVER_OP_RENAME:
                 ssh.renameFileOrFolder(args.payload.oldName, args.payload.newName, args.payload.currentDirectory, function(statusOk, stdout, stderr){
-                    handleDefaultResponse(window, statusOk, stdout, stderr);
+                    handleDefaultResponse(window, args.operationId, statusOk, stdout, stderr);
                 });
                 break;
             case constants.SERVER_OP_COPY_PASTE:
                 ssh.copyPasteFilesOrFolders(args.payload.selectedFiles, args.payload.destination, function(statusOk, stdout, stderr){
-                    handleDefaultResponse(window, statusOk, stdout, stderr);
+                    handleDefaultResponse(window, args.operationId, statusOk, stdout, stderr);
                 });
                 break;
             case constants.SERVER_OP_CUT_PASTE:
                 ssh.cutPasteFilesOrFolders(args.payload.selectedFiles, args.payload.destination, function(statusOk, stdout, stderr){
-                    handleDefaultResponse(window, statusOk, stdout, stderr);
+                    handleDefaultResponse(window, args.operationId, statusOk, stdout, stderr);
                 });
                 break;
             case constants.SERVER_OP_DOWNLOAD:
-                ssh.downloadFiles(args.payload.files, args.payload.destination, args.payload.downloadId, function(chunkData){
-                    window.webContents.send("stray-data", chunkData);
+                ssh.downloadFiles(args.payload.files, args.payload.destination, args.payload.id, function(response){
+                    window.webContents.send(`server-operation${args.operationId}-response`, response);
                 });
                 break;
             case constants.SERVER_OP_UPLOAD:
-                ssh.uploadFiles(args.payload.files, args.payload.destination, args.payload.downloadId, function(chunkData){
-                    window.webContents.send("stray-data", chunkData);
+                ssh.uploadFiles(args.payload.files, args.payload.destination, args.payload.id, function(response){
+                    window.webContents.send(`server-operation${args.operationId}-response`, response);
                 });
                 break;          
         }

@@ -109,21 +109,11 @@ function filesOperation(operation, remoteFiles, target, id, responseCallback,  r
         const command = operation==="UPLOAD"?uploadCommand:downloadCommand;
         const Proccess = childProcess.spawn(command, {shell:true});
         const callBackIsValid = responseCallback && responseCallback instanceof Function;
-        Proccess.stdout.on("data", function(data){
-            if(callBackIsValid){
-                responseCallback({stdoutChunk: data.toString(), id});
-            }
-        });
         Proccess.stderr.on("data", function(data){
             if(callBackIsValid){
                 responseCallback({stderrChunk: data.toString(), done:false, id});
             }
         });
-        Proccess.on("end", function(){
-            if(callBackIsValid){
-                responseCallback({done:true, success:true, id})
-            }
-        })
         Proccess.on("exit", function(code){
             if(callBackIsValid){
                 responseCallback({done:true, success:code===0, id})

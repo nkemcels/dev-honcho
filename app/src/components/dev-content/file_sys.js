@@ -31,7 +31,6 @@ export default class FileSystemView extends React.Component{
             sudoPwd:null
         }
         this.cachedList = {}
-        ipc.on("stray-data", this.handleStrayData)
     }
     componentDidMount(){
         if(!this.props.connected){
@@ -49,37 +48,6 @@ export default class FileSystemView extends React.Component{
                     });
                 }
             });
-        }
-    }
-
-    componentWillUnmount(){
-        ipc.removeAllListeners("stray-data")
-    }
-
-    handleStrayData = (event, data)=>{
-         const updateThisDownloadIdText = (status)=>{
-            const temp = [...this.state.downloadState]
-            temp[data.id] = status;
-            this.setState({downloadState:temp}, ()=>{
-                setTimeout(() => {
-                    temp[data.id] = null;
-                    if(!this.state.downloadState.reduce((acc, val)=>Boolean(acc&&val), true)){
-                        this.setState({downloadState:temp})
-                    }else{
-                        this.setState({downloadState:null})
-                    }
-                }, 5000);
-            });
-        }
-        if(data.done){
-            if(data.success){
-                updateThisDownloadIdText("[DONE]")
-            }else{
-                updateThisDownloadIdText("[FAILED]")
-            }
-        }else if(data.stderrChunk){
-            updateThisDownloadIdText("[FAILED]")
-            this.displayAlert(`ERROR: ${data.stderrChunk}`);
         }
     }
 
@@ -210,6 +178,31 @@ export default class FileSystemView extends React.Component{
         });
     }
 
+    displayUploadDownloadStatus = (status, downupId)=>{  //downupId -> Download or Upload Id
+        let temp = [...this.state.downloadUploadState]
+        temp[downupId] = status;
+        this.setState({downloadUploadState:temp}, ()=>{
+            setTimeout(() => {
+                temp = [...this.state.downloadUploadState]
+                delete temp[downupId]
+                this.setState({downloadUploadState:temp})
+            }, 3000);
+        });
+    }
+
+    handleUploadDownloadComplete = (data)=>{
+        if(data.done){
+            if(data.success){
+                this.displayUploadDownloadStatus("[DONE]", data.id)
+            }else{
+                this.displayUploadDownloadStatus("[FAILED]", data.id)
+            }
+        }else if(data.stderrChunk){
+            this.displayUploadDownloadStatus("[FAILED]", data.id)
+            this.displayAlert(`ERROR: ${data.stderrChunk}`);
+        }
+    }
+
     handleDownloadSelected = ()=>{
         if(this.state.selectedFiles.length<=0) return;    
         const { dialog } = electron
@@ -221,28 +214,39 @@ export default class FileSystemView extends React.Component{
             
             const options = {files:this.state.selectedFiles.map(elt=>({path: path.join(this.state.currentDirectory, elt.filename), type:elt.filetype})),
                              destination,
-                             downloadId:this.downloadId};
+                             id:this.downloadId};
+            console.log("initialing download for ", options);                 
             
             const statusText = `[Downloading (${this.state.selectedFiles.length}) items]`;
-            const downloadState = this.state.downloadState? [...this.state.downloadState]:[];
-            downloadState[this.downloadId] = statusText;
-            this.setState({downloadState, selectedFiles:[]});                
+            const downloadUploadState = this.state.downloadUploadState? [...this.state.downloadUploadState]:[];
+            downloadUploadState[this.downloadId] = statusText;
+            this.setState({downloadUploadState, selectedFiles:[]});                
             this.props.serverOperation({type:constants.SERVER_OP_DOWNLOAD, payload:options}, (response)=>{
-                //console.log("unhandled response:", response);
+                this.handleUploadDownloadComplete(response);
             });                 
         }
     }
 
     handleUploadFiles = (files, folders)=>{
         const allFiles = []
-        if(files){
-            allFiles = [...allFiles, ...files]
-        }
-        if(folders){
-            allFiles = [...allFiles, ...folders]
-        }
+        if(files){   allFiles = [...allFiles, ...files]  }
+        if(folders){   allFiles = [...allFiles, ...folders]   }
         if(allFiles.length>0){
+            const destination = this.state.currentDirectory;
+            if(!this.uploadId){ this.uploadId = 0; }
+            this.uploadId++; 
             
+            const options = {files:allFiles,
+                             destination,
+                             uploadId:this.uploadId};
+            
+            const statusText = `[Uploading (${allFiles.length}) items]`;
+            const downloadUploadState = this.state.downloadUploadState? [...this.state.downloadUploadState]:[];
+            downloadUploadState[this.downloadId] = statusText;
+            this.setState({downloadUploadState, selectedFiles:[]});                
+            this.props.serverOperation({type:constants.SERVER_OP_DOWNLOAD, payload:options}, (response)=>{
+                //console.log("unhandled response:", response);
+            });  
         }
     }
 
@@ -419,11 +423,11 @@ export default class FileSystemView extends React.Component{
                                      onClick={this.handleLaunchSelectedFile}>
                                     <span className='glyphicon glyphicon-new-window' style={{color:"#00796B"}} />
                                 </div>
-                                {(this.state.operationMessage||this.state.downloadState)&&
+                                {(this.state.operationMessage||this.state.downloadUploadState&&this.state.downloadUploadState.length>0)&&
                                     <div className="fs-header-menu-item operation-message"
                                         style={{marginLeft:40}}>
-                                        <b style={this.state.downloadState?{marginLeft:5}:{}}>{this.state.operationMessage}</b>
-                                        <b>{this.state.downloadState?this.state.downloadState.join(" "):null}</b>
+                                        <b style={this.state.downloadUploadState?{marginLeft:5}:{}}>{this.state.operationMessage}</b>
+                                        <b style={{fontSize:12}}>{this.state.downloadUploadState?this.state.downloadUploadState.join(" ").trim():null}</b>
                                     </div>
                                 }
                                 <div style={{flexGrow:1, textAlign:"right"}}>
