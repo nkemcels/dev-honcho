@@ -381,6 +381,11 @@ function performServerOperation(event, args){
                 ssh.uploadFiles(args.payload.files, args.payload.destination, args.payload.id, function(response){
                     window.webContents.send(`server-operation${args.operationId}-response`, response);
                 });
+                break; 
+            case constants.SERVER_OP_LAUNCH_FILE:
+                ssh.editFile(args.payload.fileName, args.payload.currentDirectory, function(statusOk, stdout, stderr){
+                    handleDefaultResponse(window, args.operationId, statusOk, stdout, stderr);
+                });
                 break;          
         }
     }

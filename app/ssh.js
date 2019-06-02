@@ -1,8 +1,8 @@
 const NodeSSH = require('node-ssh')
 const temp = require("tmp");
 const fs = require("fs");
-const tty = require("tty")
-const childProcess = require("child_process");
+const path = require("path")
+const {shell} = require("electron")
 temp.setGracefulCleanup();
 const ssh = new NodeSSH();
 let connectionArgs = {/*
@@ -89,6 +89,7 @@ const tempFiles = {}
 function getOrCreateTempFile(key, contentPath, options){
     if(!tempFiles[key]){
         tempFiles[key] = temp.fileSync(options).name;
+        tempFiles[ tempFiles[key] ] = key  //for faster access.
         if(contentPath){
             fs.copyFileSync(contentPath, tempFiles[key]);
             if(options.mode){
@@ -130,6 +131,41 @@ function uploadFiles(localFiles, remoteTarget, id, responseCallback,  retryCount
     filesOperation("UPLOAD", localFiles, remoteTarget, id, responseCallback,  retryCount)
 }
 
+const Watcher = require("./watcher");
+const watcher = new Watcher();
+function editFile(remoteFile, directory, responseCallback, retryCount=2){
+    const remoteFilePath = path.join(directory, remoteFile);
+    const tempPath = getOrCreateTempFile(remoteFilePath, null, { prefix: 'devhoncho.tmp-', postfix: remoteFile});
+    const command = `cat "${remoteFile}"`;
+    runCommand(command, directory, function(statusOk, stdout, stderr){
+        if(statusOk){
+            fs.writeFile(tempPath, stdout, function(err){
+                if(err){
+                    console.log("error: ", err); //TODO: handle unable to write to file error
+                }else{
+                    shell.openItem(tempPath);
+                    watcher.addFile(tempPath, function(){
+                        fs.readFile(tempPath, function(err, data){
+                            if(err){
+                                //TODO: handle unable to read file error
+                            }else{
+                                const updateCommand = `echo "${data.toString()}">"${remoteFile}"`;
+                                runCommand(updateCommand, directory, function(statusOk, stdout, stderr){
+                                    console.log("ok: ",statusOk, "stdout: ", stdout, ", stderr: ", stderr)
+                                })
+                            }
+                        })
+                    });
+                    watcher.startWatcher();
+                }
+            })
+        }
+        if(responseCallback && responseCallback instanceof Function){
+            responseCallback(statusOk, stdout, stderr);
+        }
+    }, retryCount);
+}
+
 module.exports = {
     connectToServer,
     runCommand,
@@ -141,5 +177,6 @@ module.exports = {
     copyPasteFilesOrFolders,
     cutPasteFilesOrFolders,
     downloadFiles,
-    uploadFiles
+    uploadFiles,
+    editFile
 }

@@ -144,11 +144,12 @@ export default class FileSystemView extends React.Component{
         }
     }
 
-    handleFileDoubleClicked = (filename, filetype)=>{
-        if(filetype === "DIRECTORY"){
-            this.listDirectoryFor(path.join(this.state.currentDirectory, filename), filename);
+    handleFileDoubleClicked = (fileName, fileType)=>{
+        if(fileType === "DIRECTORY"){
+            this.listDirectoryFor(path.join(this.state.currentDirectory, fileName), fileName);
         }else{
-            //launch file
+            let options = {currentDirectory:this.state.currentDirectory, fileName};
+            this.launchFileExternally(options)
         }
     }
 
@@ -376,7 +377,22 @@ export default class FileSystemView extends React.Component{
     }
 
     handleLaunchSelectedFile = ()=>{
+        let options = {currentDirectory:this.state.currentDirectory, fileName:this.state.selectedFiles[0].filename};
+        if(this.state.selectedFiles.length!=1) return;
+        const fileName = this.state.selectedFiles[0].filename;
+        const fileType = this.state.selectedFiles[0].filetype;
+        this.setState({operationMessage:`Opening ${fileName}`});
+        if(fileType == "DIRECTORY"){
+            this.listDirectoryFor(path.join(this.state.currentDirectory, fileName), fileName);
+        }else{
+            this.launchFileExternally(options)
+        }
+    }
 
+    launchFileExternally = (options)=>{
+        this.props.serverOperation({type:constants.SERVER_OP_LAUNCH_FILE, payload:options}, (response)=>{
+            this.setState({operationMessage:null});
+        });
     }
 
     render(){
