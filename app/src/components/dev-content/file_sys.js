@@ -48,6 +48,8 @@ export default class FileSystemView extends React.Component{
                     });
                 }
             });
+        }else{
+            this.listDirectoryFor("~", "Home")
         }
     }
 
@@ -98,6 +100,9 @@ export default class FileSystemView extends React.Component{
     listDirectoryFor = (filepath, filename, saveBreadcrumb=true, useCache=true, callback)=>{
         if(useCache&&this.cachedList[filepath]){
             this.handleSetFileList(filepath, filename, this.cachedList[filepath], saveBreadcrumb)
+            if(callback && callback instanceof Function){
+                callback(true);
+            }
         }else{
             this.props.serverOperation({type:constants.SERVER_OP_LIST_DIR, payload:filepath}, (response)=>{
                 if(response.result == "OK"){
@@ -137,10 +142,15 @@ export default class FileSystemView extends React.Component{
     }
 
     listQuickAccessDir = (name)=>{
+        this.setState({listingQuickAccess:name})
         if(name!="/" && name!="~"){
-            this.listDirectoryFor(path.join("~", name), name);
+            this.listDirectoryFor(path.join("~", name), name, true, true, (success)=>{
+                this.setState({listingQuickAccess:null})
+            });
         }else{
-            this.listDirectoryFor(name, name=="/"?"Root":name=="~"?"Home":name);
+            this.listDirectoryFor(name, name=="/"?"Root":name=="~"?"Home":name, true, true, (success)=>{
+                this.setState({listingQuickAccess:null})
+            });
         }
     }
 
@@ -389,10 +399,25 @@ export default class FileSystemView extends React.Component{
         }
     }
 
+    handleSaveChangeDetected = (event, args)=>{
+
+    }
+
     launchFileExternally = (options)=>{
         this.props.serverOperation({type:constants.SERVER_OP_LAUNCH_FILE, payload:options}, (response)=>{
             this.setState({operationMessage:null});
+            if(!this.saveChangeRegistered){ 
+                ipc.on("save-change-detected", this.handleSaveChangeDetected);
+                this.saveChangeRegistered = true
+            }
         });
+    }
+
+    hardRefreshCurrentDirectory = ()=>{
+        this.setState({hardRefreshing:true})
+        this.listDirectoryFor(this.state.currentDirectory, this.state.currentFileName, false, false, (success)=>{
+            this.setState({hardRefreshing:false});
+        })
     }
 
     render(){
@@ -411,18 +436,18 @@ export default class FileSystemView extends React.Component{
                                     <span className='glyphicon glyphicon-folder-close' style={{color:"#01579B"}} />
                                 </div>
                                 <div className={`fs-header-menu-item ${this.state.selectedFiles.length>0?"fs-header-menu-item-hoverable":"fs-header-menu-item-disabled"}`} 
-                                     style={{marginLeft:40}}
+                                     style={{marginLeft:30}}
                                      onClick={this.handleDownloadSelected}>
                                     <span className='glyphicon glyphicon-cloud-download' style={{color:"#00796B"}} />
                                 </div>
                                 
                                 <div className="fs-header-menu-item fs-header-menu-item-hoverable">
-                                         <UploadSelection
-                                            className="glyphicon glyphicon-cloud-upload" 
-                                            uploadSelectedFilesAndFolders={(files, folders)=>this.handleUploadFiles(files, folders)}/>
+                                    <UploadSelection
+                                        className="glyphicon glyphicon-cloud-upload" 
+                                        uploadSelectedFilesAndFolders={(files, folders)=>this.handleUploadFiles(files, folders)}/>
                                 </div>
                                 <div className={`fs-header-menu-item ${this.state.selectedFiles.length>0?"fs-header-menu-item-hoverable":"fs-header-menu-item-disabled"}`} 
-                                     style={{marginLeft:40}}
+                                     style={{marginLeft:20}}
                                      onClick={this.handleCutSelected}>
                                     <span className='glyphicon glyphicon-scissors' style={{color:"#c62828"}} />
                                 </div>
@@ -435,12 +460,12 @@ export default class FileSystemView extends React.Component{
                                     <span className='glyphicon glyphicon-paste' style={{color:"#0288D1"}} />
                                 </div>
                                 <div className={`fs-header-menu-item ${this.state.selectedFiles.length==1?"fs-header-menu-item-hoverable":"fs-header-menu-item-disabled"}`} 
-                                     style={{marginLeft:40}}
+                                     style={{marginLeft:20}}
                                      onClick={this.handleRenameSelected}>
                                     <span className='glyphicon glyphicon-pencil' style={{color:"#c62828"}} />
                                 </div>
                                 <div className="fs-header-menu-item fs-header-menu-item-hoverable" 
-                                     style={{marginLeft:40}}
+                                     style={{marginLeft:20}}
                                      onClick={this.selectAllItemsInCurrentDirectory}>
                                     <span className='glyphicon glyphicon-list-alt' style={{color:"#0288D1"}} />
                                 </div>
@@ -449,19 +474,23 @@ export default class FileSystemView extends React.Component{
                                     <span className='glyphicon glyphicon-trash' style={{color:"#b71c1c"}} />
                                 </div>
                                 <div className={`fs-header-menu-item ${this.state.selectedFiles.length==1?"fs-header-menu-item-hoverable":"fs-header-menu-item-disabled"}`} 
-                                     style={{marginLeft:40}}
+                                     style={{marginLeft:20}}
                                      onClick={this.handleLaunchSelectedFile}>
                                     <span className='glyphicon glyphicon-new-window' style={{color:"#00796B"}} />
                                 </div>
                                 {(this.state.operationMessage||this.state.downloadUploadState&&this.state.downloadUploadState.length>0)&&
                                     <div className="fs-header-menu-item operation-message"
-                                        style={{marginLeft:40}}>
+                                        style={{marginLeft:20}}>
                                         <b style={this.state.downloadUploadState?{marginLeft:5}:{}}>{this.state.operationMessage}</b>
                                         <b style={{fontSize:12}}>{this.state.downloadUploadState?this.state.downloadUploadState.join(" ").trim():null}</b>
                                     </div>
                                 }
                                 <div style={{flexGrow:1, textAlign:"right"}}>
-                                    <span className="pull-right" style={{lineHeight:"2.5em", margin:0, padding:0, marginRight:5, fontSize:14}}> {this.state.currentFileName} </span>
+                                    <span 
+                                        className='glyphicon glyphicon-repeat pull-right fs-header-menu-item fs-header-menu-item-hoverable' 
+                                        style={{color:"#FFA726", paddingTop:5, paddingBottom:5, marginTop:5, marginRight:10}}
+                                        onClick={this.hardRefreshCurrentDirectory} />
+                                    <span className="pull-right" style={{lineHeight:"2.5em", margin:0, padding:0, marginRight:5, fontSize:15}}><b> {this.state.currentFileName} </b></span>
                                 </div>
                             </div> 	
                         </div>
@@ -473,30 +502,54 @@ export default class FileSystemView extends React.Component{
                                     </div>
                                     <div className="fs-quick-access-body">
                                         <ul className="nav nav-pills nav-stacked">
-                                            <li onClick={()=>this.listQuickAccessDir("~")}><a href="#"><div className="fs-quick-access-item">
-                                                <span className="glyphicon glyphicon-home" /> <span>Home</span> 
+                                            <li onClick={()=>this.listQuickAccessDir("~")}><a href="#" style={{width:"100%"}}><div className="fs-quick-access-item">
+                                                <span className="glyphicon glyphicon-home" /> <span>Home</span>
+                                                {this.state.listingQuickAccess==="~"&&
+                                                    <span className="pull-right simple-loader" style={{marginTop:2}} />
+                                                } 
                                             </div></a></li>
-                                            <li onClick={()=>this.listQuickAccessDir("Desktop")}><a href="#"><div className="fs-quick-access-item">
-                                                <span className="glyphicon glyphicon-briefcase" /> <span>Desktop</span> 
+                                            <li onClick={()=>this.listQuickAccessDir("Desktop")}><a href="#" style={{width:"100%"}}><div className="fs-quick-access-item">
+                                                <span className="glyphicon glyphicon-briefcase" /> <span>Desktop</span>
+                                                {this.state.listingQuickAccess==="Desktop"&&
+                                                    <span className="pull-right simple-loader" style={{marginTop:2}} />
+                                                } 
                                             </div></a></li>
-                                            <li onClick={()=>this.listQuickAccessDir("Documents")}><a href="#"><div className="fs-quick-access-item">
-                                                <span className="glyphicon glyphicon-file" /> <span>Documents</span> 
+                                            <li onClick={()=>this.listQuickAccessDir("Documents")}><a href="#" style={{width:"100%"}}><div className="fs-quick-access-item">
+                                                <span className="glyphicon glyphicon-file" /> <span>Documents</span>
+                                                {this.state.listingQuickAccess==="Documents"&&
+                                                    <span className="pull-right simple-loader" style={{marginTop:2}} />
+                                                } 
                                             </div></a></li>
-                                            <li onClick={()=>this.listQuickAccessDir("Downloads")}><a href="#"><div className="fs-quick-access-item">
-                                                <span className="glyphicon glyphicon-save" /> <span>Downloads</span> 
+                                            <li onClick={()=>this.listQuickAccessDir("Downloads")}><a href="#" style={{width:"100%"}}><div className="fs-quick-access-item">
+                                                <span className="glyphicon glyphicon-save" /> <span>Downloads</span>
+                                                {this.state.listingQuickAccess==="Downloads"&&
+                                                    <span className="pull-right simple-loader" style={{marginTop:2}} />
+                                                } 
                                             </div></a></li>
-                                            <li onClick={()=>this.listQuickAccessDir("Music")}><a href="#"><div className="fs-quick-access-item">
-                                                <span className="glyphicon glyphicon-music" /> <span>Music</span> 
+                                            <li onClick={()=>this.listQuickAccessDir("Music")}><a href="#" style={{width:"100%"}}><div className="fs-quick-access-item">
+                                                <span className="glyphicon glyphicon-music" /> <span>Music</span>
+                                                {this.state.listingQuickAccess==="Music"&&
+                                                    <span className="pull-right simple-loader" style={{marginTop:2}} />
+                                                } 
                                             </div></a></li>
-                                            <li onClick={()=>this.listQuickAccessDir("Pictures")}><a href="#"><div className="fs-quick-access-item">
-                                                <span className="glyphicon glyphicon-picture" /> <span>Pictures</span> 
+                                            <li onClick={()=>this.listQuickAccessDir("Pictures")}><a href="#" style={{width:"100%"}}><div className="fs-quick-access-item">
+                                                <span className="glyphicon glyphicon-picture" /> <span>Pictures</span>
+                                                {this.state.listingQuickAccess==="Pictures"&&
+                                                    <span className="pull-right simple-loader" style={{marginTop:2}} />
+                                                } 
                                             </div></a></li>
-                                            <li onClick={()=>this.listQuickAccessDir("Videos")}><a href="#"><div className="fs-quick-access-item">
-                                                <span className="glyphicon glyphicon-film" /> <span>Videos</span> 
+                                            <li onClick={()=>this.listQuickAccessDir("Videos")}><a href="#" style={{width:"100%"}}><div className="fs-quick-access-item">
+                                                <span className="glyphicon glyphicon-film" /> <span>Videos</span>
+                                                {this.state.listingQuickAccess==="Videos"&&
+                                                    <span className="pull-right simple-loader" style={{marginTop:2}} />
+                                                } 
                                             </div></a></li>
                                             <li className="divider" />
-                                            <li onClick={()=>this.listQuickAccessDir("/")}><a href="#"><div className="fs-quick-access-item">
+                                            <li onClick={()=>this.listQuickAccessDir("/")}><a href="#" style={{width:"100%"}}><div className="fs-quick-access-item">
                                                 <span className="glyphicon glyphicon-hdd" /> <span>Root</span> 
+                                                {this.state.listingQuickAccess==="/"&&
+                                                    <span className="pull-right simple-loader" style={{marginTop:2}} />
+                                                }
                                             </div></a></li>
                                         </ul>
                                     </div>
@@ -542,9 +595,9 @@ export default class FileSystemView extends React.Component{
                                                 <h4>Folder is Empty</h4>
                                             </div>
                                          }
-                                         {this.state.fileList.length==0&&!this.state.currentDirectory&&
+                                         {(this.state.fileList.length==0&&!this.state.currentDirectory||this.state.hardRefreshing)&&
                                             <Dimmer active>
-                                                <Loader size='large' indeterminate>Listing Files in Home Directory...</Loader>
+                                                <Loader size='large' indeterminate>{this.state.hardRefreshing?"Reloading Files in Current...":"Listing Files in Home Directory..."}</Loader>
                                             </Dimmer> 
                                          }
                                     </div>

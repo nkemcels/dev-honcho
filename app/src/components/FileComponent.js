@@ -67,7 +67,7 @@ export default class FileComponent extends React.Component{
                  onDoubleClick={this.handleMouseDoubleClicked}
                  onClick={this.handleMouseClicked}>
                  {this.props.filetype=='FILE'?
-                    <div style={{opacity: this.props.cutActivated&&this.props.activated? 0.6:1}}>
+                    <div style={{opacity: this.props.cutActivated&&this.props.activated? 0.6:1}} draggable>
                         <div className="file-component">
                             <span className='glyphicon glyphicon-file' style={{fontSize:45, margin:5, position:'relative', color:"#FFA726"}}/>
                             <span style={{position:'absolute', top:35, left:0, right:0, bottom:0, color:'white', fontSize:10}}><b>{this.props.ext.toUpperCase()}</b></span>
@@ -75,7 +75,7 @@ export default class FileComponent extends React.Component{
                         <div style={{wordWrap:'break-word', textOverflow:'ellipsis', overflow: 'hidden', width:'100%', whiteSpace: 'nowrap', textAlign:'center'}}>{this.props.filename}</div>
                     </div>
                     :
-                    <div style={{opacity: this.props.cutActivated&&this.props.activated? 0.6:1}}>
+                    <div style={{opacity: this.props.cutActivated&&this.props.activated? 0.6:1}} draggable>
                         <div className="folder-component">
                             <span className={`glyphicon glyphicon-folder-${this.state.loading?"open":"close"}`} style={{fontSize:45, margin:5, color:this.state.loading?"#64B5F6":"#01579B"}}>
                             </span><br />

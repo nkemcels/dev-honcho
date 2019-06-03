@@ -311,8 +311,16 @@ function parseListedFiles(stdout){
         if(fileParts.length>=9){
             const name = fileParts.slice(8, fileParts.length).join(" ").trim();
             processed = [...processed, {
-                name:name.endsWith("/")?name.substring(0, name.lastIndexOf("/")):name,
-                type: name.endsWith("/")?"DIRECTORY":"FILE",
+                name:name.endsWith("/")?name.substring(0, name.lastIndexOf("/")):
+                     name.endsWith("*")?name.substring(0, name.lastIndexOf("*")):
+                     name.endsWith("|")?name.substring(0, name.lastIndexOf("|")):
+                     name.endsWith("@")?name.substring(0, name.lastIndexOf("@")):
+                     name.endsWith("=")?name.substring(0, name.lastIndexOf("=")):name,
+                type: name.endsWith("/")?"DIRECTORY":
+                      name.endsWith("*")?"EXE":
+                      name.endsWith("|")?"FIFO":
+                      name.endsWith("@")?"EXE":
+                      name.endsWith("=")?"SYMLINK":"FILE",
                 extension: path.extname(name),
                 size: fileParts[4],
                 metadata: fileParts[0]+" "+fileParts[1]+" "+fileParts[2]+" "+fileParts[3],
@@ -320,6 +328,8 @@ function parseListedFiles(stdout){
             }];
         }
     }
+
+    console.log("processed: ", processed)
 
     return processed.length==0?null:processed;
 }
