@@ -1,6 +1,6 @@
 import React from "react";
 import {Header, Footer, Pane, InitialContent} from "../components";
-import {NewAccountPane, HomeView, SignInPane,FileSystemView} from "../components";
+import {NewAccountPane, HomeView, SignInPane, FileSystemView, TerminalView} from "../components";
 import { Menu, Sidebar } from 'semantic-ui-react'
 import {SettingsPane} from "../components"
 import {getHashedString} from "../utils/helpers"
@@ -287,7 +287,14 @@ export default class AppContainer extends React.Component{
                                 serverName = {this.state.currentServer}
                                 serverOperation = {this.handleServerOperation}
                                 connectToServer = {(callback)=>this.handleConnectToServer(this.state.currentUser, this.state.currentServer, callback)} />
-                break;                 
+                break;
+            case constants.TERMINAL_VIEW:
+                menuTitle = props && props.menuTitle?props.menuTitle:"DH-TERMINAL";
+                Component = <TerminalView
+                                {...props}
+                                renderComponent = {this.renderThisComponent}
+                                serverName = {this.state.currentServer} />
+                break;                     
             case constants.NEW_SERVER_INSTANCE_WINDOW:
                 ipc.send("open-modal-window", {user:this.state.currentUser, windowType:component, props} );
                 ipc.once("open-modal-window-response", (event, data)=>{
@@ -422,7 +429,7 @@ export default class AppContainer extends React.Component{
                                     <span className="pull-left">Manage Deployments</span> 
                                 </span>
                             </Menu.Item>
-                            <Menu.Item as='a'>
+                            <Menu.Item as='a' onClick={()=>this.renderThisComponent(constants.TERMINAL_VIEW)}>
                                 <span className="sidebar-menuitem" style={{marginLeft:5}}>
                                     <span className="glyphicon glyphicon-console pull-left"/>
                                     <span className="pull-left">Terminal</span> 
