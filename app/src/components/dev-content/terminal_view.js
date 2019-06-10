@@ -6,14 +6,21 @@ export default class TerminalPane extends React.Component{
     constructor(props){
         super(props);
         this.terminalTabs =  [
-            { menuItem: 'DH-Term 1', render: () => <Tab.Pane attached='top'><Terminal style={{width:"100%", height:"100%"}} /></Tab.Pane> },
-            { menuItem: 'Add', render: () => <Tab.Pane attached='top'>Tab 2 Content</Tab.Pane> }
+            { TabHead: this.getTabHeadComponent('DH-Term 1'), TabContent: <Terminal style={{width:"100%", height:"100%"}} /> },
+            { TabHead: this.getTabHeadComponent("Add"), TabContent: <span> content 2 </span> }
         ]
     }
+
+    getTabHeadComponent = (text)=>{
+        return (
+            <span>{text}</span>
+        )
+    }
+
     render(){
         return (
             <div className="match-parent">
-                <div style={{display:"flex"}}>
+                <div style={{display:"flex", margin:5}}>
                     <div style={{flexGrow:1}}>
                         <TabPane panes={this.terminalTabs} />
                     </div>

@@ -14,8 +14,8 @@ export default class TabPane extends React.Component{
     render(){
         return(
             <div style={this.props.style?this.props.style:{}}>
-                <div className="match-parent" style={{display:"flex"}}>
-                    <div style={{display:"flex", width:"100%"}}>
+                <div className="match-parent dht-tab-container">
+                    <div className="dht-tab-items">
                     {this.props.panes instanceof Array && this.props.panes.map((elt, indx)=>(
                         <div className={`dht-tab-item ${indx===this.state.selectedTab?"dht-active-tab":""}`} 
                              onClick={()=>this.handleTabClicked(indx)}>
@@ -25,7 +25,7 @@ export default class TabPane extends React.Component{
                     </div>
                     <div style={{flexGrow:1, width:"100%"}}>
                     {this.props.panes instanceof Array && this.props.panes.map((elt, indx)=>(
-                        <div className="match-parent" style={indx===this.state.selectedTab?{}:{width:0, height:0, position:"absolute"}}>
+                        <div className={`match-parent ${indx!==this.state.selectedTab?"dht-hide-tab-content":""}`}>
                             {  elt.TabContent }
                         </div>
                     ))}
