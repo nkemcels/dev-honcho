@@ -62,6 +62,19 @@ function getServerInstance(userName, serverName){
     return null;
 }
 
+function getQuickRun(userName, quickRunLabel){
+    let userData = getUserData(userName);
+    if (userData && userData.quickRuns){
+        for(let quickRun of userData.quickRuns){
+            if(quickRun.qrLabel == quickRunLabel){
+                return quickRun;
+            }
+        }
+    }
+
+    return null;
+}
+
 function getServerInstanceApp(userName, serverName, appName){
     let serverInstance = getServerInstance(userName, serverName);
     if(serverInstance && serverInstance.apps&&serverInstance.apps instanceof Array){
@@ -107,6 +120,22 @@ function addNewServerInstanceApp(userName, serverInstanceName, appData, callback
     }
 }
 
+function addNewQuickRun(userName, quickRunData, callback){
+    let userData = getUserData(userName);
+    let quickRun = getQuickRun(userName, quickRunData.qrLabel);
+    if(quickRun){
+        if(callback && callback instanceof Function){
+            callback(null, "A Quick Run with that label already exist!");
+        }
+    }else{
+        if(!userData.quickRuns){
+            userData.quickRuns = [];
+        }
+        userData.quickRuns = [quickRunData, ...userData.quickRuns];
+        replaceUserData(userName, userData, callback);
+    }
+}
+
 function updateServerInstance(userName, serverInstanceName, serverInstanceData, callback){
     if(serverInstanceName===null){
         addNewServerInstance(userName, serverInstanceData, callback);
@@ -117,6 +146,21 @@ function updateServerInstance(userName, serverInstanceName, serverInstanceData, 
         const index = userData.serverInstances.findIndex(instance=>instance.serverName===serverInstanceName)
         if(Number.isInteger(index)){
             userData.serverInstances[index] = serverInstanceData
+        }
+    }
+    replaceUserData(userName, userData, callback);
+}
+
+function updateQuickRuns(userName, quickRunLabel, qrData, callback){
+    if(quickRunLabel===null){
+        addNewQuickRun(userName, qrData, callback);
+        return;
+    }
+    let userData = getUserData(userName);
+    if(userData.quickRuns){
+        const index = userData.quickRuns.findIndex(qr=>qr.qrLabel===quickRunLabel)
+        if(Number.isInteger(index)){
+            userData.quickRuns[index] = qrData
         }
     }
     replaceUserData(userName, userData, callback);
@@ -222,6 +266,7 @@ module.exports = {
     addNewServerInstanceApp,
     updateServerInstance,
     updateServerInstanceApp,
+    updateQuickRuns,
     addNewUser,
     updateUserPassword,
     updateUserAuthCredentials,
