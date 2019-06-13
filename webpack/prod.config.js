@@ -6,7 +6,8 @@ module.exports={
     entry:{
         mainBundle: path.join(__dirname, "..", "app", "src", "index.js"),
         newServerBundle: path.join(__dirname, "..", "app", "src", "newServerIndex.js"),
-        newAppBundle: path.join(__dirname, "..", "app", "src", "newAppIndex.js")
+        newAppBundle: path.join(__dirname, "..", "app", "src", "newAppIndex.js"),
+        newQuickRunBundle: path.join(__dirname, "..", "app", "src", "newQuickRunIndex.js")
     }, 
     output: {
         path: path.join(__dirname, "..", "app", "dist"),
