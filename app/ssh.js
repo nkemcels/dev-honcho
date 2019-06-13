@@ -3,6 +3,7 @@ const temp = require("tmp");
 const fs = require("fs");
 const path = require("path")
 const {shell} = require("electron")
+const childProcess = require("child_process");
 temp.setGracefulCleanup();
 const ssh = new NodeSSH();
 let connectionArgs = {/*
