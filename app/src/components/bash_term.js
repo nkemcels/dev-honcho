@@ -35,7 +35,7 @@ const shell = process.env[os.platform() === 'win32' ? 'COMSPEC' : 'SHELL'];
 export default class TerminalComponent extends React.Component{
     constructor(props){
         super(props);
-        this.xtermWrapperRef = React.createRef();
+        this.xtermWrapperRef = props.eltRef;
         this.ptyProcess = pty.spawn(shell, [], {
             name: 'xterm-color',
             cols: 1500,
@@ -47,14 +47,18 @@ export default class TerminalComponent extends React.Component{
     componentDidMount(){
         // let xtermWidth = this.xtermWrapperRef.current.offsetWidth;
         // let xtermHeight = this.xtermWrapperRef.current.offsetHeight;
-         let cols = 1500//Math.floor(xtermWidth/2);
-         let rows = 100//Math.floor(xtermHeight/3);
-
+         
         this.initNewTerminalSession()
 
         remote.getCurrentWindow().on("resize", this.debounce(()=>{
             this.xterm.fit()
         }, 250))
+
+        if(!window.terminalSessions){
+            window.terminalSessions = []
+        }
+        window.terminalSessions = window.terminalSessions.filter(elt=>elt.sessionId!=this.props.sessionId)  //remove any existing session
+        window.terminalSessions = [{sessionId: this.props.sessionId, executeCommand: this.executeCommand}, ...window.terminalSessions]
     }
     initNewTerminalSession=()=>{
         // // Initialize xterm.js and attach it to the DOM
@@ -89,6 +93,21 @@ export default class TerminalComponent extends React.Component{
             }, intv);
         }
     }
+
+    executeCommand = (commands, displayCommands=true)=>{
+        if(!this) return;
+        if(displayCommands){
+            if(this.xterm){
+                //this.xterm.writeln(commands)
+                this.xterm.emit("data", commands)
+            }
+        }else{
+            if(this.ptyProcess){
+                this.ptyProcess.write(`${commands}\n`);
+            }
+        }
+    }
+
     render(){
         return(
             <div style={{width:"100%", height:"100%"}}>

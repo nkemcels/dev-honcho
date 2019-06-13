@@ -179,8 +179,9 @@ function createWindow(parent, html, options){
 function openModalWindow(event, args){
     const parent = BrowserWindow.fromWebContents(event.sender);
     const page = args.windowType == constants.NEW_SERVER_INSTANCE_WINDOW? "newServerPage":
-                 args.windowType == constants.NEW_APP_INSTANCE_WINDOW? "newAppPage": null;
-    let modalWindow = createWindow(parent, page, {width:800, height:600, title:"Add New Server"})    
+                 args.windowType == constants.NEW_APP_INSTANCE_WINDOW? "newAppPage":
+                 args.windowType == constants.NEW_QUICK_RUN_WINDOW? "newQuickRunPage": null;
+    let modalWindow = createWindow(parent, page, {width:800, height:600})    
     modalWindow.user = args.user;
     modalWindow.windowType = args.windowType;
     modalWindow.props = args.props;    
@@ -195,7 +196,11 @@ function submitModalWindowResponse(event, args){
                 break;
             case constants.NEW_APP_INSTANCE_WINDOW:
                 handleServerInstanceAppModalWindowResponse(args, window);
-                break;    
+                break;
+            case constants.NEW_QUICK_RUN_WINDOW:
+                handleQuickRunModalWindowResponse(args, window)
+                break;        
+
         }
     }
     else window.close();
@@ -207,6 +212,22 @@ function handleServerInstanceModalWindowResponse(args, window){
     delete args.isToUpdate;
 
     auth.updateServerInstance(window.user, serverInstanceName, args, function(data, error){
+        console.log("data is ", data, " and error is ", error);
+        if(error){
+            window.webContents.send("notification", getResponse(null, error));
+        }else{
+            window.getParentWindow().webContents.send("open-modal-window-response", getResponse(data, null));
+            window.close();
+        }
+    });
+}
+
+function handleQuickRunModalWindowResponse(args, window){
+    const auth = require("./res/auth");
+    const quickRunLabel = args.isToUpdate? window.props.qrLabel : null;
+    delete args.isToUpdate;
+
+    auth.updateQuickRuns(window.user, quickRunLabel, args, function(data, error){
         console.log("data is ", data, " and error is ", error);
         if(error){
             window.webContents.send("notification", getResponse(null, error));

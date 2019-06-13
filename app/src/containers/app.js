@@ -191,7 +191,13 @@ export default class AppContainer extends React.Component{
                 serverInstances: userData.serverInstances
             }
         }
-        
+    }
+
+    getQuickRuns = (userName)=>{
+        let userData = this.getUserData(userName);
+        if(userData){
+            return userData.quickRuns
+        }
     }
 
     handleDeleteServerInstance = (serverName, callback)=>{
@@ -212,7 +218,7 @@ export default class AppContainer extends React.Component{
         if(data.result==="OK"){
             this.setState({ authData:data.payload }, ()=>{
                 if(callback && callback instanceof Function){
-                    callback(true);
+                    callback(true, data);
                 }
             });
         }else if(callback && callback instanceof Function){ 
@@ -254,7 +260,6 @@ export default class AppContainer extends React.Component{
                 Component = <HomeView  
                                 {...props} 
                                 renderComponent = {this.renderThisComponent} />
-                             
                 break; 
             case constants.SIGNIN_PANE:
                 menuTitle = props && props.menuTitle?props.menuTitle:"SIGNIN";
@@ -292,21 +297,19 @@ export default class AppContainer extends React.Component{
                 menuTitle = props && props.menuTitle?props.menuTitle:"DH-TERMINAL";
                 Component = <TerminalView
                                 {...props}
+                                quickRuns={this.getQuickRuns(this.state.currentUser)}
+                                currentUser={this.state.currentUser}
                                 renderComponent = {this.renderThisComponent}
                                 serverName = {this.state.currentServer} />
                 break;                     
-            case constants.NEW_SERVER_INSTANCE_WINDOW:
+            case constants.NEW_SERVER_INSTANCE_WINDOW: 
+            case constants.NEW_APP_INSTANCE_WINDOW:
+            case constants.NEW_QUICK_RUN_WINDOW:
                 ipc.send("open-modal-window", {user:this.state.currentUser, windowType:component, props} );
                 ipc.once("open-modal-window-response", (event, data)=>{
                     this._handleDefaultResponse(data, callback);
                 });
                 break;
-            case constants.NEW_APP_INSTANCE_WINDOW:
-                ipc.send("open-modal-window", {user:this.state.currentUser, windowType:component, props} );
-                ipc.once("open-modal-window-response", (event, data)=>{
-                    this._handleDefaultResponse(data, callback);
-                });
-                break;                                   
         }
         if(Component!=null){
             this.setState({
