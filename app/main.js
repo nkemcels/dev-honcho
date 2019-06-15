@@ -212,7 +212,6 @@ function handleServerInstanceModalWindowResponse(args, window){
     delete args.isToUpdate;
 
     auth.updateServerInstance(window.user, serverInstanceName, args, function(data, error){
-        console.log("data is ", data, " and error is ", error);
         if(error){
             window.webContents.send("notification", getResponse(null, error));
         }else{
@@ -228,7 +227,6 @@ function handleQuickRunModalWindowResponse(args, window){
     delete args.isToUpdate;
 
     auth.updateQuickRuns(window.user, quickRunLabel, args, function(data, error){
-        console.log("data is ", data, " and error is ", error);
         if(error){
             window.webContents.send("notification", getResponse(null, error));
         }else{
@@ -276,6 +274,18 @@ function deleteServerInstanceApp(event, args){
             window.webContents.send("notification", getResponse(null, error));
         }else{
             window.webContents.send("delete-server-instance-app-response", getResponse(data, null));
+        }
+    });
+}
+
+function deleteQuickRun(event, args){
+    const auth = require("./res/auth");
+    const window = BrowserWindow.fromWebContents(event.sender);
+    auth.deleteQuickRun(args.user, args.qrLabel, function(data, error){
+        if(error){
+            window.webContents.send("notification", getResponse(null, error));
+        }else{
+            window.webContents.send("delete-quick-run-response", getResponse(data, null));
         }
     });
 }
@@ -340,8 +350,8 @@ function parseListedFiles(stdout){
                 type: name.endsWith("/")?"DIRECTORY":
                       name.endsWith("*")?"EXE":
                       name.endsWith("|")?"FIFO":
-                      name.endsWith("@")?"EXE":
-                      name.endsWith("=")?"SYMLINK":"FILE",
+                      name.endsWith("@")?"SYMLINK":
+                      name.endsWith("=")?"SOCK":"FILE",
                 extension: path.extname(name),
                 size: fileParts[4],
                 metadata: fileParts[0]+" "+fileParts[1]+" "+fileParts[2]+" "+fileParts[3],
@@ -362,6 +372,11 @@ function handleDefaultResponse(window, operationId, statusOk, stdout, stderr){
     }else{
         window.webContents.send(`server-operation${operationId}-response`, getResponse(null, stdout||stderr));
     }
+}
+
+function fetchAllServerStats(event){
+    const window = BrowserWindow.fromWebContents(event.sender);
+    
 }
 
 function performServerOperation(event, args){
@@ -443,5 +458,7 @@ ipc.on("get-modal-window-props", sendModalWindowProps)
 ipc.on("open-modal-window-response", submitModalWindowResponse);
 ipc.on("delete-server-instance", deleteServerInstance);
 ipc.on("delete-server-instance-app", deleteServerInstanceApp);
+ipc.on("delete-quick-run", deleteQuickRun);
 ipc.on("connect-to-server", connectToServer);
 ipc.on("server-operation", performServerOperation);
+ipc.on("get-all-sys-stats", fetchAllServerStats)

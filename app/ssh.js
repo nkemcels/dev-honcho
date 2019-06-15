@@ -101,6 +101,10 @@ function getOrCreateTempFile(key, contentPath, options){
     return tempFiles[key];
 }
 
+function fetchAllServerStats(responseCallback, retryCount=2){
+    //const command = ``
+}
+
 function filesOperation(operation, files, target, id, responseCallback,  retryCount=2){
     const pemPath = connectionArgs.privateKey;
     if(pemPath){

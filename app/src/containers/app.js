@@ -1,6 +1,6 @@
 import React from "react";
 import {Header, Footer, Pane, InitialContent} from "../components";
-import {NewAccountPane, HomeView, SignInPane, FileSystemView, TerminalView} from "../components";
+import {NewAccountPane, HomeView, SignInPane, FileSystemView, TerminalView, DevOpsView} from "../components";
 import { Menu, Sidebar } from 'semantic-ui-react'
 import {SettingsPane} from "../components"
 import {getHashedString} from "../utils/helpers"
@@ -214,6 +214,13 @@ export default class AppContainer extends React.Component{
         })
     }
 
+    handleDeleteQuickRun = (qrLabel, callback)=>{
+        ipc.send("delete-quick-run", {user:this.state.currentUser, qrLabel});
+        ipc.once("delete-quick-run-response", (event, data)=>{
+            this._handleDefaultResponse(data, callback)
+        })
+    }
+
     _handleDefaultResponse = (data, callback)=>{
         if(data.result==="OK"){
             this.setState({ authData:data.payload }, ()=>{
@@ -293,6 +300,14 @@ export default class AppContainer extends React.Component{
                                 serverOperation = {this.handleServerOperation}
                                 connectToServer = {(callback)=>this.handleConnectToServer(this.state.currentUser, this.state.currentServer, callback)} />
                 break;
+            case constants.DEVOPS_VIEW:
+                menuTitle = props && props.menuTitle?props.menuTitle:"DEVOPS";
+                Component = <DevOpsView
+                                {...props}
+                                currentUser={this.state.currentUser}
+                                renderComponent = {this.renderThisComponent}
+                                serverName = {this.state.currentServer} />    
+                break;                
             case constants.TERMINAL_VIEW:
                 menuTitle = props && props.menuTitle?props.menuTitle:"DH-TERMINAL";
                 Component = <TerminalView
@@ -300,6 +315,7 @@ export default class AppContainer extends React.Component{
                                 quickRuns={this.getQuickRuns(this.state.currentUser)}
                                 currentUser={this.state.currentUser}
                                 renderComponent = {this.renderThisComponent}
+                                deleteQuickRun = {this.handleDeleteQuickRun}
                                 serverName = {this.state.currentServer} />
                 break;                     
             case constants.NEW_SERVER_INSTANCE_WINDOW: 
@@ -426,7 +442,7 @@ export default class AppContainer extends React.Component{
                                     <span className="pull-left">File System</span> 
                                 </span>
                             </Menu.Item>
-                            <Menu.Item as='a'>
+                            <Menu.Item as='a' onClick={()=>this.renderThisComponent(constants.DEVOPS_VIEW)}>
                                 <span className="sidebar-menuitem" style={{marginLeft:5}}>
                                     <span className="glyphicon glyphicon-hdd pull-left"/>
                                     <span className="pull-left">Manage Deployments</span> 

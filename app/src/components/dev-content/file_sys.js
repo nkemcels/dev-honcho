@@ -1,5 +1,5 @@
 import React from "react";
-import {Dimmer, Loader, Image} from "semantic-ui-react";
+import {Dimmer, Loader, Image, Popup} from "semantic-ui-react";
 import placeHolderImage from "../../../images/short-paragraph.png";
 import FileComponent from "../FileComponent";
 import UploadSelection from "./upload_selection";
@@ -54,7 +54,7 @@ export default class FileSystemView extends React.Component{
     }
 
     handleBackNav = ()=>{
-        if(this.backPathsCount - 2>0){
+        if(this.backPathsCount - 1>0){
             const fpath = this.state.breadcrumbPaths[--this.backPathsCount-1];
             const fpathArr = fpath.split("/");
             if(fpath){
@@ -156,7 +156,14 @@ export default class FileSystemView extends React.Component{
 
     handleFileDoubleClicked = (fileName, fileType)=>{
         if(fileType === "DIRECTORY"){
-            this.listDirectoryFor(path.join(this.state.currentDirectory, fileName), fileName);
+            this.setState({
+                openningFile: fileName
+            });
+            this.listDirectoryFor(path.join(this.state.currentDirectory, fileName), fileName, true, true, ()=>{
+                this.setState({
+                    openningFile: null
+                }); 
+            });
         }else{
             let options = {currentDirectory:this.state.currentDirectory, fileName};
             this.launchFileExternally(options)
@@ -440,7 +447,6 @@ export default class FileSystemView extends React.Component{
                                      onClick={this.handleDownloadSelected}>
                                     <span className='glyphicon glyphicon-cloud-download' style={{color:"#00796B"}} />
                                 </div>
-                                
                                 <div className="fs-header-menu-item fs-header-menu-item-hoverable">
                                     <UploadSelection
                                         className="glyphicon glyphicon-cloud-upload" 
@@ -572,22 +578,43 @@ export default class FileSystemView extends React.Component{
                                                     }
                                                 </ol>
                                             </div>
+                                            <div style={{display:"inline-block", marginRight:5}} className="pull-right">
+                                                <a className="btn btn-default btn-sm">
+                                                    <span className="glyphicon glyphicon-th-list" />
+                                                </a>&nbsp;&nbsp;
+                                                <Popup wide trigger={<a className="btn btn-default btn-sm">
+                                                                        <span className="glyphicon glyphicon-search" />
+                                                                     </a>} 
+                                                       on='click'
+                                                       position='bottom right'>
+                                                    <div class="input-group">
+                                                        <input type="text" className="form-control" placeholder={`Search in ${this.state.currentFileName}`} />
+                                                        <div className="input-group-btn">
+                                                            <button className="btn btn-primary" type="submit">
+                                                                <span className="glyphicon glyphicon-search" />
+                                                            </button>
+                                                        </div>
+                                                    </div>              
+                                                </Popup>  
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="fs-display-content" onClick={()=>this.setState({selectedFiles:[]})}>
                                          {
                                             this.state.fileList.map((elt, indx)=>{
                                                 return <FileComponent 
-                                                    key = {indx}
-                                                    filename = {elt.name}
-                                                    filetype = {elt.type}
-                                                    ext = {elt.extension}
-                                                    selected = {(this.state.selectedFiles.findIndex(item=>item.filename===elt.name)>=0)}
-                                                    activated = {(this.state.activatedFiles.findIndex(item=>item.filename===elt.name)>=0)}
-                                                    copyActivated = {this.state.copyActivated}
-                                                    cutActivated = {this.state.cutActivated}
-                                                    fileClicked = {this.handleFileClicked}
-                                                    fileDoubleClicked={this.handleFileDoubleClicked} />
+                                                            key = {indx}
+                                                            filename = {elt.name}
+                                                            filetype = {elt.type}
+                                                            isListView={true}
+                                                            ext = {elt.extension}
+                                                            openning={this.state.openningFile === elt.name}
+                                                            selected = {(this.state.selectedFiles.findIndex(item=>item.filename===elt.name)>=0)}
+                                                            activated = {(this.state.activatedFiles.findIndex(item=>item.filename===elt.name)>=0)}
+                                                            copyActivated = {this.state.copyActivated}
+                                                            cutActivated = {this.state.cutActivated}
+                                                            fileClicked = {this.handleFileClicked}
+                                                            fileDoubleClicked={this.handleFileDoubleClicked} />
                                             })
                                          }
                                          {this.state.fileList.length==0&&this.state.currentDirectory&&

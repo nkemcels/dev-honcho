@@ -4,7 +4,7 @@ import fileSysIcon from "../../../images/filesys.png";
 import devOpsIcon from "../../../images/devops1.png";
 import terminalIcon from "../../../images/terminal.png";
 import settingsIcon from "../../../images/settings.png";
-import {SETTINGS_PANE, FILE_SYSTEM_VIEW, TERMINAL_VIEW} from "../../../constants"
+import {SETTINGS_PANE, FILE_SYSTEM_VIEW, TERMINAL_VIEW, DEVOPS_VIEW} from "../../../constants"
 
 export default class HomeView extends React.Component{
     handleMenuItemClicked = (menuItem) =>{
@@ -28,7 +28,7 @@ export default class HomeView extends React.Component{
                                     <img src={devOpsIcon} style={{width:"100px", height:"75px"}} /><br />
                                     Deploy your Apps and monitor your System
                                 </Header>
-                                <Button primary size="big">Launch</Button>
+                                <Button primary size="big" onClick={()=>this.handleMenuItemClicked(DEVOPS_VIEW)}>Launch</Button>
                             </Grid.Column>
                         </Grid.Row>
                         <Grid.Row verticalAlign='middle' columns={2} style={{marginTop:25, marginBottom:10}}>

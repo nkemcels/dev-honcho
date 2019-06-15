@@ -259,6 +259,14 @@ function deleteServerInstanceApp(userName, serverInstanceName, serverInstanceApp
     updateServerInstance(userName, serverInstanceName, serverInstance, callback);
 }
 
+function deleteQuickRun(userName, qrLabel, callback){
+    let userData = getUserData(userName);
+    if(userData.quickRuns ){
+        userData.quickRuns = userData.quickRuns.filter((qr, ind)=>qr.qrLabel!==qrLabel);
+    }
+    replaceUserData(userName, userData, callback);
+}
+
 module.exports = {
     getAllUsers,
     getUserData,
@@ -271,5 +279,6 @@ module.exports = {
     updateUserPassword,
     updateUserAuthCredentials,
     deleteServerInstance,
-    deleteServerInstanceApp
+    deleteServerInstanceApp,
+    deleteQuickRun
 }

@@ -9,6 +9,7 @@ import _SignInPane from "./dev-content/signin_view";
 import _SettingsPane from "./dev-content/settings";
 import _FileSystemView from "./dev-content/file_sys";
 import _TerminalView from "./dev-content/terminal_view";
+import _DevOpsView from "./dev-content/devops_view"
 
 export const Header = _Header;
 export const Footer = _Footer;
@@ -21,3 +22,4 @@ export const SettingsPane = _SettingsPane;
 export const ClassicCardPane = _ClassicCardPane;
 export const FileSystemView = _FileSystemView;
 export const TerminalView = _TerminalView;
+export const DevOpsView = _DevOpsView;

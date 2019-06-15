@@ -132,6 +132,15 @@ export default class TerminalPane extends React.Component{
         }
     }
 
+    handleDeleteQuickRun = (evt, qrLabel)=>{
+        evt.stopPropagation();
+        this.props.deleteQuickRun(qrLabel, (didDelete, data)=>{
+            if(didDelete){
+                this.loadUserQuickRuns(data.payload);
+            }
+        })
+    }
+
     render(){
         return (
             <div className="match-parent" style={{marginLeft:5}}>
@@ -165,7 +174,13 @@ export default class TerminalPane extends React.Component{
                                                             <a className="word-match-width" href="#"> 
                                                                 {elt.qrLabel} 
                                                                 <span className="pull-right">
-                                                                    &emsp;&emsp; <a className="btn btn-xs btn-default" onClick={(evt)=>this.handleUpdateQuickRun(evt, elt)}>Edit...</a>
+                                                                    &emsp;&emsp; 
+                                                                    <a className="btn btn-xs btn-default" onClick={(evt)=>this.handleUpdateQuickRun(evt, elt)}>
+                                                                        <span className="glyphicon glyphicon-pencil" style={{fontSize:10}} />
+                                                                    </a>&nbsp;
+                                                                    <a className="btn btn-xs btn-danger" onClick={(evt)=>this.handleDeleteQuickRun(evt, elt.qrLabel)}>
+                                                                        <span className="glyphicon glyphicon-trash" style={{fontSize:10}}/>
+                                                                    </a>             
                                                                 </span>
                                                             </a>
                                                         </li>

@@ -32,6 +32,7 @@ export default class NewAppPane extends React.Component{
                 baseDir:data.baseDir?data.baseDir:"",
                 gitRepo:data.gitRepo?data.gitRepo:"",
                 deployCommands:data.deployCommands?data.deployCommands:"",
+                defaultDeployCommands:data.deployCommands?data.deployCommands:"",
                 isToUpdate:data.appName?true:false
             });
         }
@@ -116,7 +117,7 @@ export default class NewAppPane extends React.Component{
                                     <div style={{marginTop:10, marginLeft:80}}>
                                     <b style={{fontSize:13}}>Deployment Commands (from <b style={{color:"#666", fontFamily:"monospace"}}>user@Remote:~$)</b></b>
                                         <CodeMirror
-                                            value={this.state.deployCommands}
+                                            value={this.state.defaultDeployCommands}
                                             options={{
                                                 mode: 'shell',
                                                 theme: 'abcdef',

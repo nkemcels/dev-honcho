@@ -13,6 +13,7 @@ export default class NewAppPane extends React.Component{
         this.state = {
             qrLabel:"",
             commands:"",
+            defaultCommands:"",
             chainCommands:false
         }
         ipcRenderer.on("notification", this.handleNewNotification);
@@ -27,6 +28,7 @@ export default class NewAppPane extends React.Component{
             this.setState({
                 qrLabel:data.qrLabel?data.qrLabel:"",
                 commands:data.commands?data.commands:"",
+                defaultCommands:data.commands?data.commands:"",
                 chainCommands:data.chainCommands?data.chainCommands:false,
                 isToUpdate:data.qrLabel?true:false
             });
@@ -99,7 +101,7 @@ export default class NewAppPane extends React.Component{
                                     <div style={{marginTop:10, marginLeft:80}}>
                                     <b style={{fontSize:13}}>Quick Run Commands</b>
                                         <CodeMirror
-                                            value={this.state.commands}
+                                            value={this.state.defaultCommands}
                                             options={{
                                                 mode: 'shell',
                                                 theme: 'abcdef',
