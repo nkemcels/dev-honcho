@@ -335,25 +335,31 @@ function connectToServer(event, args){
 
 function parseListedFiles(stdout){
     if(!stdout) return null;
-    let results = stdout.split("\n");
+    let outputs = stdout.split("\r\n\r\n");
+    let fileListInfo = outputs[0].split("\n");
+    let dirItemCounts = outputs[1].split("\n");
+    dirItemCounts = Object.assign({}, ...dirItemCounts.map(elt=>({
+        [elt.substring(0, elt.lastIndexOf("#")).trim()] : elt.substring(elt.lastIndexOf("#")+1)
+    })) );
     let processed = []
-    for (let line of results){
+    for (let line of fileListInfo){
         let fileParts = line.split(/\s+/);
         if(fileParts.length>=9){
             const name = fileParts.slice(8, fileParts.length).join(" ").trim();
+            const trimedName =  name.endsWith("/")?name.substring(0, name.lastIndexOf("/")).trim():
+                                name.endsWith("*")?name.substring(0, name.lastIndexOf("*")).trim():
+                                name.endsWith("|")?name.substring(0, name.lastIndexOf("|")).trim():
+                                name.endsWith("@")?name.substring(0, name.lastIndexOf("@")).trim():
+                                name.endsWith("=")?name.substring(0, name.lastIndexOf("=")).trim():name.trim()
             processed = [...processed, {
-                name:name.endsWith("/")?name.substring(0, name.lastIndexOf("/")):
-                     name.endsWith("*")?name.substring(0, name.lastIndexOf("*")):
-                     name.endsWith("|")?name.substring(0, name.lastIndexOf("|")):
-                     name.endsWith("@")?name.substring(0, name.lastIndexOf("@")):
-                     name.endsWith("=")?name.substring(0, name.lastIndexOf("=")):name,
+                name: trimedName,
                 type: name.endsWith("/")?"DIRECTORY":
                       name.endsWith("*")?"EXE":
                       name.endsWith("|")?"FIFO":
                       name.endsWith("@")?"SYMLINK":
-                      name.endsWith("=")?"SOCK":"FILE",
+                      name.endsWith("=")?"SOCKET":"FILE",
                 extension: path.extname(name),
-                size: fileParts[4],
+                size: name.endsWith("/")? dirItemCounts[trimedName]:fileParts[4],
                 metadata: fileParts[0]+" "+fileParts[1]+" "+fileParts[2]+" "+fileParts[3],
                 created : fileParts[5]+" "+fileParts[6]+" "+fileParts[7]
             }];
@@ -375,7 +381,7 @@ function handleDefaultResponse(window, operationId, statusOk, stdout, stderr){
 }
 
 function fetchAllServerStats(event){
-    const window = BrowserWindow.fromWebContents(event.sender);
+    //const window = BrowserWindow.fromWebContents(event.sender);
     
 }
 
@@ -430,7 +436,7 @@ function performServerOperation(event, args){
                 break; 
             case constants.SERVER_OP_LAUNCH_FILE:
                 ssh.editFile(args.payload.fileName, args.payload.currentDirectory, function(statusOk, stdout, stderr){
-                    handleDefaultResponse(window, args.operationId, statusOk, stdout, stderr);
+                    //handleDefaultResponse(window, args.operationId, statusOk, stdout, stderr);
                 });
                 break;          
         }

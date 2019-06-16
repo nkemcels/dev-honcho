@@ -1,7 +1,7 @@
 import React from "react";
 import {Dimmer, Loader, Image, Popup} from "semantic-ui-react";
 import placeHolderImage from "../../../images/short-paragraph.png";
-import FileComponent from "../FileComponent";
+import FileComponent, {FileListComponent} from "../FileComponent";
 import UploadSelection from "./upload_selection";
 import * as constants from "../../../constants";
 import {remote as electron, ipcRenderer as ipc} from "electron";
@@ -28,7 +28,8 @@ export default class FileSystemView extends React.Component{
             copyActivated:false,
             activatedFiles:[],
             activatedPath:null,
-            sudoPwd:null
+            sudoPwd:null,
+            isListView:false
         }
         this.cachedList = {}
     }
@@ -427,6 +428,12 @@ export default class FileSystemView extends React.Component{
         })
     }
 
+    toggleListViewDisplay = ()=>{
+        this.setState({
+            isListView:!this.state.isListView
+        });
+    }
+
     render(){
         return(
             <div className="match-parent">
@@ -579,8 +586,8 @@ export default class FileSystemView extends React.Component{
                                                 </ol>
                                             </div>
                                             <div style={{display:"inline-block", marginRight:5}} className="pull-right">
-                                                <a className="btn btn-default btn-sm">
-                                                    <span className="glyphicon glyphicon-th-list" />
+                                                <a className="btn btn-default btn-sm" onClick={this.toggleListViewDisplay}>
+                                                    <span className={`glyphicon ${this.state.isListView?"glyphicon glyphicon-th":"glyphicon-th-list"}`} />
                                                 </a>&nbsp;&nbsp;
                                                 <Popup wide trigger={<a className="btn btn-default btn-sm">
                                                                         <span className="glyphicon glyphicon-search" />
@@ -602,12 +609,11 @@ export default class FileSystemView extends React.Component{
                                     <div className="fs-display-content" onClick={()=>this.setState({selectedFiles:[]})}>
                                          {
                                             this.state.fileList.map((elt, indx)=>{
-                                                return <FileComponent 
+                                                return (
+                                                    this.state.isListView?
+                                                        <FileListComponent 
                                                             key = {indx}
-                                                            filename = {elt.name}
-                                                            filetype = {elt.type}
-                                                            isListView={true}
-                                                            ext = {elt.extension}
+                                                            file = {elt}
                                                             openning={this.state.openningFile === elt.name}
                                                             selected = {(this.state.selectedFiles.findIndex(item=>item.filename===elt.name)>=0)}
                                                             activated = {(this.state.activatedFiles.findIndex(item=>item.filename===elt.name)>=0)}
@@ -615,6 +621,17 @@ export default class FileSystemView extends React.Component{
                                                             cutActivated = {this.state.cutActivated}
                                                             fileClicked = {this.handleFileClicked}
                                                             fileDoubleClicked={this.handleFileDoubleClicked} />
+                                                        :        
+                                                        <FileComponent 
+                                                            key = {indx}
+                                                            file = {elt}
+                                                            openning={this.state.openningFile === elt.name}
+                                                            selected = {(this.state.selectedFiles.findIndex(item=>item.filename===elt.name)>=0)}
+                                                            activated = {(this.state.activatedFiles.findIndex(item=>item.filename===elt.name)>=0)}
+                                                            copyActivated = {this.state.copyActivated}
+                                                            cutActivated = {this.state.cutActivated}
+                                                            fileClicked = {this.handleFileClicked}
+                                                            fileDoubleClicked={this.handleFileDoubleClicked} />)
                                             })
                                          }
                                          {this.state.fileList.length==0&&this.state.currentDirectory&&

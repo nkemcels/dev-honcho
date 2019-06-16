@@ -53,36 +53,37 @@ function runCommand(command, cwd, responseCallback, retryCount=2){
     });
 }
 
+const listFilesCommand = "ls -l --file-type -h -a -F . && echo -e \"\r\n\r\n\" &&ls -1 | while read line ; do echo -n $line \" #\" && ls \"$line\" 2> /dev/null|wc -l ; done";
 function listFiles(directory, responseCallback, retryCount=2){
-    runCommand("ls -l --file-type -h -a -F .", directory, responseCallback, retryCount)
+    runCommand(listFilesCommand, directory, responseCallback, retryCount)
 }
 
 function createNewFile(filename, directory, responseCallback, retryCount=2){
-    runCommand(`touch ${filename.replace(/\s/, "\\ ")} && ls -l --file-type -h -a -F .`, directory, responseCallback, retryCount);
+    runCommand(`touch ${filename.replace(/\s/, "\\ ")} && ${listFilesCommand}`, directory, responseCallback, retryCount);
 }
 
 function createNewFolder(foldername, directory, responseCallback, retryCount=2){
-    runCommand(`mkdir ${foldername.replace(/\s/, "\\ ")} && ls -l --file-type -h -a -F .`, directory, responseCallback, retryCount);
+    runCommand(`mkdir ${foldername.replace(/\s/, "\\ ")} && ${listFilesCommand}`, directory, responseCallback, retryCount);
 }
 
 function deleteItems(items, directory, responseCallback, retryCount=2){
-    let deleteFilesCmd = items && items instanceof Array && `rm -r ${items.map(elt=>elt.replace(/\s/, "\\ ")).join(" ")} ; ls -l --file-type -h -a -F .`;
+    let deleteFilesCmd = items && items instanceof Array && `rm -r ${items.map(elt=>elt.replace(/\s/, "\\ ")).join(" ")} ; ${listFilesCommand}`;
     runCommand(deleteFilesCmd, directory, responseCallback, retryCount);
 }
 
 function renameFileOrFolder(oldName, newName, directory, responseCallback, retryCount=2){
-    runCommand(`mv ${oldName.replace(/\s/, "\\ ")} ${newName.replace(/\s/, "\\ ")} && ls -l --file-type -h -a -F .`, directory, responseCallback, retryCount);
+    runCommand(`mv ${oldName.replace(/\s/, "\\ ")} ${newName.replace(/\s/, "\\ ")} && ${listFilesCommand}`, directory, responseCallback, retryCount);
 }
 
 function copyPasteFilesOrFolders(files, directory, responseCallback, retryCount=2){
     let command = files instanceof Array && files.reduce((acc, value)=>`cp -r ${value} . ; ${acc}`, "")
-    command = `${command} ls -l --file-type -h -a -F .`
+    command = `${command} ${listFilesCommand}`
     runCommand(command, directory, responseCallback, retryCount);
 }
 
 function cutPasteFilesOrFolders(files, directory, responseCallback, retryCount=2){
     let command = files instanceof Array && files.reduce((acc, value)=>`mv ${value} . ; ${acc}`, "")
-    command = `${command} ls -l --file-type -h -a -F .`
+    command = `${command} ${listFilesCommand}`
     runCommand(command, directory, responseCallback, retryCount);
 }
 
