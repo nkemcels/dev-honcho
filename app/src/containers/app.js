@@ -266,7 +266,9 @@ export default class AppContainer extends React.Component{
                 menuTitle = props && props.menuTitle?props.menuTitle:"DEV-HONCHO";
                 Component = <HomeView  
                                 {...props} 
-                                renderComponent = {this.renderThisComponent} />
+                                renderComponent = {this.renderThisComponent}
+                                serverName = {this.state.currentServer}
+                                 />
                 break; 
             case constants.SIGNIN_PANE:
                 menuTitle = props && props.menuTitle?props.menuTitle:"SIGNIN";
@@ -358,7 +360,10 @@ export default class AppContainer extends React.Component{
 
     setCurrentServer = (serverName)=>{
         this.setState({
-            currentServer: serverName
+            currentServer: serverName,
+            isServerConnected:false
+        }, ()=>{
+            this.renderThisComponent(this.state.currentComponentName);
         });
     }
 
@@ -436,13 +441,13 @@ export default class AppContainer extends React.Component{
                             <Menu style={{backgroundColor:"#212121"}}>
                                 <b style={{fontSize:15,color:"#E0E0E0"}} className="pull-left">Main Items</b>
                             </Menu>
-                            <Menu.Item as='a' onClick={()=>this.renderThisComponent(constants.FILE_SYSTEM_VIEW)}>
+                            <Menu.Item as='a' onClick={()=>this.renderThisComponent(constants.FILE_SYSTEM_VIEW)} disabled={!this.state.currentServer}>
                                 <span className="sidebar-menuitem" style={{marginLeft:5}}>
                                     <span className="glyphicon glyphicon-duplicate pull-left"/>
                                     <span className="pull-left">File System</span> 
                                 </span>
                             </Menu.Item>
-                            <Menu.Item as='a' onClick={()=>this.renderThisComponent(constants.DEVOPS_VIEW)}>
+                            <Menu.Item as='a' onClick={()=>this.renderThisComponent(constants.DEVOPS_VIEW)} disabled={!this.state.currentServer}>
                                 <span className="sidebar-menuitem" style={{marginLeft:5}}>
                                     <span className="glyphicon glyphicon-hdd pull-left"/>
                                     <span className="pull-left">Manage Deployments</span> 
