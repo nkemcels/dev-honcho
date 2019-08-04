@@ -21,14 +21,14 @@ export default class HomeView extends React.Component{
                                     <img src={fileSysIcon} style={{width:"100px", height:"75px"}} /><br />
                                     Browse your Server's File System
                                 </Header>
-                                <Button primary size="big"  onClick={()=>this.handleMenuItemClicked(FILE_SYSTEM_VIEW)}>Launch</Button>
+                                <Button primary size="big" disabled={!this.props.serverName}  onClick={()=>this.handleMenuItemClicked(FILE_SYSTEM_VIEW)}>Launch</Button>
                             </Grid.Column>
                             <Grid.Column>
                                 <Header icon>
                                     <img src={devOpsIcon} style={{width:"100px", height:"75px"}} /><br />
                                     Deploy your Apps and monitor your System
                                 </Header>
-                                <Button primary size="big" onClick={()=>this.handleMenuItemClicked(DEVOPS_VIEW)}>Launch</Button>
+                                <Button primary size="big" disabled={!this.props.serverName} onClick={()=>this.handleMenuItemClicked(DEVOPS_VIEW)}>Launch</Button>
                             </Grid.Column>
                         </Grid.Row>
                         <Grid.Row verticalAlign='middle' columns={2} style={{marginTop:25, marginBottom:10}}>
