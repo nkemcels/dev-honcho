@@ -301,7 +301,7 @@ function connectToServer(event, args){
     const password = args.serverUserPwd;
     const privateKey = args.pemFilePath;
     const port = args.sshPort?args.sshPort:22;
-    const authOption = /*args.authOption*/ constants.AUTH_OPTION_PERMISSION_KEY  //for now
+    const authOption = /*args.authOption*/ constants.AUTH_OPTION_PERMISSION_KEY_AND_PASSWORD  //for now
 
     //TODO: Add auth option on the new server page.
 
@@ -336,8 +336,9 @@ function connectToServer(event, args){
 function parseListedFiles(stdout){
     if(!stdout) return null;
     let outputs = stdout.split("\r\n\r\n");
+    console.log("Output: ", outputs)
     let fileListInfo = outputs[0].split("\n");
-    let dirItemCounts = outputs[1].split("\n");
+    let dirItemCounts = outputs[1] ? outputs[1].split("\n") : [];
     dirItemCounts = Object.assign({}, ...dirItemCounts.map(elt=>({
         [elt.substring(0, elt.lastIndexOf("#")).trim()] : elt.substring(elt.lastIndexOf("#")+1)
     })) );
