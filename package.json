@@ -17,7 +17,7 @@
     "bootstrap": "3",
     "codemirror": "^5.47.0",
     "dialogs": "^2.0.1",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "node-pty": "^0.8.1",
     "node-ssh": "^6.0.0",
     "react": "^16.8.6",
