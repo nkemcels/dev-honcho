@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "bootstrap": "3",
-    "codemirror": "^5.47.0",
+    "codemirror": "^5.58.2",
     "dialogs": "^2.0.1",
     "jquery": "^3.4.1",
     "node-pty": "^0.8.1",
