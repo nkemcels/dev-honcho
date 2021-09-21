@@ -26,7 +26,7 @@
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.87.1",
     "sha1-file": "^1.0.4",
-    "ssh2": "^0.8.4",
+    "ssh2": "^1.4.0",
     "tmp": "^0.1.0",
     "vex-dialog": "^1.1.0",
     "vex-js": "^4.1.0",
